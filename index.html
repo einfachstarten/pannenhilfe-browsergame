@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seite nicht gefunden - Pannenhilfe Simulator</title>
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-color: #ef4444;
+            --success-color: #10b981;
+            --warn-color: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 40px;
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .error-card {
+            background: var(--card-bg);
+            width: 95%;
+            max-width: 1200px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 500px;
+            background-color: #374151;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer; /* Zeigt Interaktivität */
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 24px 32px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .overlay h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #111;
+        }
+
+        .kbd {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #374151;
+            box-shadow: 0 2px 0 #d1d5db;
+        }
+
+        .card-header {
+            padding: 32px;
+            background-color: #fff;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .error-code {
+            color: var(--warn-color);
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card-footer {
+            padding: 0 32px 32px 32px;
+            background-color: #fff;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .btn-secondary {
+            background-color: #f2f2f2;
+            color: #0f0f0f;
+        }
+
+        /* HUD Elemente */
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 20px;
+            color: #fff;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        #missionText {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-weight: bold;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        /* Reparatur Balken Container (wird dynamisch positioniert) */
+        #repairBarContainer {
+            position: absolute;
+            width: 60px;
+            height: 8px;
+            background: #444;
+            border: 1px solid white;
+            border-radius: 4px;
+            display: none;
+            pointer-events: none;
+        }
+        #repairBarFill {
+            width: 0%;
+            height: 100%;
+            background: var(--success-color);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        @media (max-width: 600px) {
+            .game-container { height: 400px; }
+            .card-footer { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-card">
+        <!-- Spiel Bereich -->
+        <div class="game-container" id="gameWrapper">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div id="scoreBoard">EINSÄTZE: 0</div>
+            <div id="missionText">Suche Pannen! ⚠️</div>
+            
+            <div id="repairBarContainer">
+                <div id="repairBarFill"></div>
+            </div>
+
+            <div id="startScreen" class="overlay">
+                <h2>Pannendienst Simulator</h2>
+                <p>Fahre zu den <span style="color:var(--warn-color); font-weight:bold;">Pannenautos (⚠️)</span> um zu helfen.</p>
+                <p>Verpasse keine Einsätze!</p>
+                <div style="margin-top: 15px;">
+                    <span class="kbd">←</span> <span class="kbd">→</span> Lenken
+                </div>
+            </div>
+
+            <div id="gameOverScreen" class="overlay" style="display: none;">
+                <h2>Unfall!</h2>
+                <p>Punkte: <span id="finalScore" style="font-weight: bold;">0</span></p>
+                <p style="margin-top: 12px; font-size: 0.85rem;">Drücke <span class="kbd">Leertaste</span> oder tippe für Neustart</p>
+            </div>
+        </div>
+
+        <div class="card-header">
+            <div class="error-code">404 • Panne auf der Datenautobahn</div>
+            <h1>Hier ist leider Endstation</h1>
+            <p style="color: #6b7280; max-width: 600px;">
+                Ihre angeforderte Seite hat wohl einen Motorschaden. Während wir den Abschleppwagen rufen, können Sie ja schon mal üben.
+            </p>
+        </div>
+
+        <div class="card-footer">
+            <a href="/" class="btn btn-secondary">Startseite</a>
+            <a href="#" class="btn btn-secondary" onclick="window.location.reload()">Neu laden</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('gameWrapper');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreBoard = document.getElementById('scoreBoard');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const repairBar = document.getElementById('repairBarContainer');
+        const repairFill = document.getElementById('repairBarFill');
+
+        // Status Variablen
+        let gameState = 'START'; // START, PLAYING, REPAIRING, GAMEOVER
+        let score = 0;
+        let roadOffset = 0;
+        let baseSpeed = 4;
+        let gameSpeed = baseSpeed;
+        let frameCount = 0;
+        
+        // Reparatur Logic
+        let repairTimer = 0;
+        const repairDuration = 60; // Frames bis fertig (ca 1 Sekunde)
+        let currentTarget = null; // Das Auto das wir gerade reparieren
+
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- Klassen & Objekte ---
+
+        // Der Spieler (Abschleppwagen)
+        const player = {
+            x: 0,
+            y: 0,
+            width: 44,
+            height: 75,
+            speed: 7,
+            color: '#f59e0b', // Pannen-Gelb/Orange
+            type: 'towtruck'
+        };
+
+        // Hindernisse & Ziele
+        let cars = [];
+        let particles = []; // Rauch
+        let floatingTexts = []; // Für Punkteanzeige
+
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 1.0;
+                this.vy = -1.5; // Steigt auf
+            }
+            update() {
+                this.y += this.vy;
+                this.life -= 0.02;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.font = "bold 24px Arial";
+                ctx.shadowColor = "white";
+                ctx.shadowBlur = 2;
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        class Car {
+            constructor(isBroken) {
+                this.width = 40;
+                this.height = 65;
+                this.x = Math.random() * (canvas.width - 50);
+                this.y = -100;
+                this.isBroken = isBroken;
+                this.speed = isBroken ? 0.5 : (Math.random() * 2 + 3); // Kaputte Autos rollen langsam oder stehen fast
+                
+                // Farben
+                const colors = ['#3b82f6', '#10b981', '#6366f1', '#8b5cf6', '#ec4899'];
+                this.color = isBroken ? '#9ca3af' : colors[Math.floor(Math.random() * colors.length)];
+                
+                this.repaired = false;
+                this.blinkerState = false;
+                this.blinkerTimer = 0;
+            }
+
+            update() {
+                // Wenn Spiel läuft (nicht reparieren), bewegen
+                if (gameState === 'PLAYING') {
+                    // Relativgeschwindigkeit
+                    let moveSpeed = this.isBroken ? gameSpeed : (gameSpeed + this.speed * 0.5);
+                    this.y += moveSpeed;
+                }
+
+                // Blinker Logik für Pannen
+                if (this.isBroken && !this.repaired) {
+                    this.blinkerTimer++;
+                    if (this.blinkerTimer > 10) { // Schnelleres Blinken
+                        this.blinkerState = !this.blinkerState;
+                        this.blinkerTimer = 0;
+                    }
+                    // Rauch erzeugen
+                    if (Math.random() > 0.7) {
+                        particles.push(new Smoke(this.x + this.width/2, this.y + 10)); // Rauch aus Motorhaube
+                    }
+                }
+            }
+        }
+
+        class Smoke {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 2;
+                this.alpha = 0.8;
+                this.vy = -1 - Math.random(); // Steigt auf
+                this.vx = (Math.random() - 0.5) * 2;
+            }
+            update() {
+                this.y += this.vy;
+                this.x += this.vx;
+                this.alpha -= 0.02;
+                this.size += 0.1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(100, 100, 100, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        // --- Zeichen Funktionen ---
+
+        function drawVehicle(x, y, w, h, color, type, blinkerOn) {
+            ctx.save();
+            
+            // Schatten
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(x + 5, y + 5, w, h);
+
+            // Karosserie
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+
+            // Details je nach Typ
+            if (type === 'towtruck') {
+                // Kabine
+                ctx.fillStyle = '#d97706'; // Dunkleres Orange
+                ctx.fillRect(x, y, w, h * 0.35);
+                
+                // Ladefläche
+                ctx.fillStyle = '#374151'; // Dunkelgrau
+                ctx.fillRect(x + 4, y + h * 0.4, w - 8, h * 0.55);
+                
+                // Warnleuchten (Balken) - Basis
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(x + 5, y + 5, w - 10, 4);
+
+                // Windschutzscheibe
+                ctx.fillStyle = '#1f2937';
+                ctx.fillRect(x + 5, y + 10, w - 10, 10);
+
+                // --- EINSATZLICHT (Wenn im Einsatz) ---
+                if (gameState === 'REPAIRING') {
+                    const time = Date.now() / 100;
+                    // Langsameres Drehen: * 5 statt * 15
+                    const alpha = (Math.sin(time * 5) + 1) / 2 * 0.6 + 0.4;
+                    
+                    // Großer Glow-Effekt (Radial Gradient)
+                    const centerX = x + w/2;
+                    const centerY = y + 7;
+                    const maxRadius = 40;
+                    
+                    const gradient = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, maxRadius);
+                    gradient.addColorStop(0, `rgba(255, 180, 0, ${alpha * 0.6})`);
+                    gradient.addColorStop(1, 'rgba(255, 180, 0, 0)');
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+
+                    // Kern-Licht
+                    ctx.shadowBlur = 25;
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.fillStyle = `rgba(255, 220, 100, ${alpha + 0.2})`;
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Reset Shadow
+                    ctx.shadowBlur = 0;
+                }
+
+            } else {
+                // Normales Auto
+                // Windschutzscheibe
+                ctx.fillStyle = '#1f2937';
+                ctx.fillRect(x + 4, y + 12, w - 8, 10);
+                
+                // Heckscheibe
+                ctx.fillRect(x + 4, y + h - 18, w - 8, 8);
+                
+                // Dach
+                ctx.fillStyle = color; 
+                ctx.globalAlpha = 0.9;
+                ctx.fillRect(x + 6, y + 20, w - 12, h - 35);
+                ctx.globalAlpha = 1.0;
+
+                // Frontlichter (unten)
+                ctx.fillStyle = '#fffbeb';
+                ctx.fillRect(x + 2, y + h - 5, 8, 4);
+                ctx.fillRect(x + w - 10, y + h - 5, 8, 4);
+            }
+
+            // --- WARNBLINKER (Deutlichere Darstellung) ---
+            if (blinkerOn) {
+                ctx.fillStyle = '#ff7b00'; // Kräftiges Orange
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff3300'; // Rötlicher Glow
+                
+                // Linker Blinker hinten
+                ctx.fillRect(x - 4, y, 8, 8);
+                // Rechter Blinker hinten
+                ctx.fillRect(x + w - 4, y, 8, 8);
+                
+                // Linker Blinker vorne
+                ctx.fillRect(x - 4, y + h - 8, 8, 8);
+                // Rechter Blinker vorne
+                ctx.fillRect(x + w - 4, y + h - 8, 8, 8);
+
+                ctx.shadowBlur = 0; // Reset
+            }
+
+            ctx.restore();
+        }
+
+        // --- Game Logic ---
+
+        function spawnCar() {
+            if (gameState !== 'PLAYING') return;
+
+            // Wahrscheinlichkeit für Panne vs Normal
+            const isBroken = Math.random() < 0.35;
+            
+            cars.push(new Car(isBroken));
+
+            // Nächster Spawn
+            const minTime = 800;
+            const maxTime = 1800;
+            setTimeout(spawnCar, Math.random() * (maxTime - minTime) + minTime);
+        }
+
+        function handleInput(type, code) {
+            if (type === 'keydown') {
+                if (gameState === 'GAMEOVER' && code === 'Space') resetGame();
+                if (gameState === 'START') startGame();
+                
+                if (code === 'ArrowLeft' || code === 'KeyA') player.moveLeft = true;
+                if (code === 'ArrowRight' || code === 'KeyD') player.moveRight = true;
+            }
+            if (type === 'keyup') {
+                if (code === 'ArrowLeft' || code === 'KeyA') player.moveLeft = false;
+                if (code === 'ArrowRight' || code === 'KeyD') player.moveRight = false;
+            }
+        }
+
+        window.addEventListener('keydown', e => handleInput('keydown', e.code));
+        window.addEventListener('keyup', e => handleInput('keyup', e.code));
+        
+        // Touch
+        let touchX = null;
+        container.addEventListener('touchstart', e => {
+            if(gameState === 'START' || gameState === 'GAMEOVER') {
+                if(gameState === 'GAMEOVER') resetGame();
+                else startGame();
+            }
+            touchX = e.touches[0].clientX;
+            e.preventDefault();
+        });
+        container.addEventListener('touchmove', e => {
+            if(touchX !== null && gameState === 'PLAYING') {
+                const diff = e.touches[0].clientX - touchX;
+                player.x += diff * 1.5;
+                if(player.x < 0) player.x = 0;
+                if(player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+            }
+            touchX = e.touches[0].clientX;
+            e.preventDefault();
+        });
+
+        function startGame() {
+            gameState = 'PLAYING';
+            startScreen.style.display = 'none';
+            player.x = canvas.width/2 - player.width/2;
+            player.y = canvas.height - 120;
+            cars = [];
+            particles = [];
+            floatingTexts = [];
+            score = 0;
+            frameCount = 0;
+            scoreBoard.textContent = `EINSÄTZE: 0`;
+            scoreBoard.style.color = '#fff';
+            spawnCar();
+            animate();
+        }
+
+        function resetGame() {
+            gameOverScreen.style.display = 'none';
+            startGame();
+        }
+
+        function startRepair(targetCar) {
+            gameState = 'REPAIRING';
+            currentTarget = targetCar;
+            repairTimer = 0;
+            
+            // UI
+            repairBar.style.display = 'block';
+            repairBar.style.left = (player.x - 10) + 'px';
+            repairBar.style.top = (player.y - 20) + 'px';
+        }
+
+        function finishRepair() {
+            gameState = 'PLAYING';
+            score++;
+            repairBar.style.display = 'none';
+            
+            if(currentTarget) {
+                currentTarget.repaired = true;
+                currentTarget.isBroken = false; 
+                currentTarget.color = '#10b981'; 
+                currentTarget.speed = 5; 
+            }
+            currentTarget = null;
+            scoreBoard.textContent = `EINSÄTZE: ${score}`;
+            
+            // Traffic Loop neu starten
+            spawnCar();
+        }
+
+        function crash() {
+            gameState = 'GAMEOVER';
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+            repairBar.style.display = 'none';
+        }
+
+        function update() {
+            frameCount++;
+            
+            // Rauch & FloatingText immer updaten
+            particles.forEach((p, i) => {
+                p.update();
+                if(p.alpha <= 0) particles.splice(i, 1);
+            });
+            floatingTexts.forEach((ft, i) => {
+                ft.update();
+                if(ft.life <= 0) floatingTexts.splice(i, 1);
+            });
+
+            if (gameState === 'PLAYING') {
+                // Straße Scrollen
+                roadOffset += gameSpeed;
+                if (roadOffset > 40) roadOffset = 0;
+
+                // Player Movement
+                if (player.moveLeft && player.x > 0) player.x -= player.speed;
+                if (player.moveRight && player.x < canvas.width - player.width) player.x += player.speed;
+
+                // Cars Loop
+                cars.forEach((car, index) => {
+                    car.update();
+
+                    // Collision Check
+                    const padding = 5;
+                    if (
+                        player.x + padding < car.x + car.width - padding &&
+                        player.x + player.width - padding > car.x + padding &&
+                        player.y + padding < car.y + car.height - padding &&
+                        player.y + player.height - padding > car.y + padding
+                    ) {
+                        if (car.isBroken && !car.repaired) {
+                            startRepair(car);
+                        } else if (!car.isBroken && !car.repaired) {
+                            crash();
+                        }
+                    }
+
+                    // Entfernen
+                    if (car.y > canvas.height + 50) {
+                        // VERPASSTE PANNE CHECK
+                        if (car.isBroken && !car.repaired) {
+                            score--;
+                            scoreBoard.textContent = `EINSÄTZE: ${score}`;
+                            
+                            // Visueller Effekt
+                            floatingTexts.push(new FloatingText(car.x + car.width/2 - 10, canvas.height - 40, "-1", "#ef4444"));
+                            
+                            // Score Board Flash
+                            scoreBoard.style.color = '#ef4444';
+                            setTimeout(() => {
+                                if(gameState === 'PLAYING') scoreBoard.style.color = '#fff';
+                            }, 300);
+                        }
+                        
+                        cars.splice(index, 1);
+                    }
+                });
+
+            } else if (gameState === 'REPAIRING') {
+                // Timer erhöhen
+                repairTimer++;
+                let pct = (repairTimer / repairDuration) * 100;
+                repairFill.style.width = pct + '%';
+                
+                repairBar.style.left = (player.x - 8) + 'px';
+
+                if (repairTimer >= repairDuration) {
+                    finishRepair();
+                }
+            }
+        }
+
+        function draw() {
+            // Straße
+            ctx.fillStyle = '#374151';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Mittelstreifen
+            ctx.strokeStyle = '#6b7280';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([30, 40]);
+            ctx.lineDashOffset = -roadOffset; 
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, -50);
+            ctx.lineTo(canvas.width / 2, canvas.height + 50);
+            ctx.stroke();
+
+            // Randstreifen
+            ctx.setLineDash([]);
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#d1d5db';
+            ctx.beginPath();
+            ctx.moveTo(10, 0); ctx.lineTo(10, canvas.height);
+            ctx.moveTo(canvas.width - 10, 0); ctx.lineTo(canvas.width - 10, canvas.height);
+            ctx.stroke();
+
+            // Objekte Zeichnen
+            cars.forEach(car => {
+                drawVehicle(car.x, car.y, car.width, car.height, car.color, 'car', car.blinkerState);
+            });
+
+            // Player
+            drawVehicle(player.x, player.y, player.width, player.height, player.color, 'towtruck', false);
+
+            // Partikel (Rauch über allem)
+            particles.forEach(p => p.draw());
+
+            // Floating Texts (Punkte)
+            floatingTexts.forEach(ft => ft.draw());
+        }
+
+        function animate() {
+            if (gameState !== 'GAMEOVER') {
+                update();
+                draw();
+                requestAnimationFrame(animate);
+            }
+        }
+
+        // Init
+        resizeCanvas();
+        player.y = canvas.height - 120;
+        player.x = canvas.width/2 - 22;
+        draw();
+
+    </script>
+</body>
+</html>
