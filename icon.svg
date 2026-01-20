@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Straßenwacht Connected Icon">
+  <rect width="512" height="512" rx="96" fill="#ffcd00"/>
+  <rect x="96" y="320" width="320" height="56" rx="28" fill="#1e293b" opacity="0.2"/>
+  <g transform="translate(96 120)">
+    <rect x="40" y="160" width="240" height="80" rx="24" fill="#0f172a"/>
+    <rect x="56" y="120" width="208" height="72" rx="28" fill="#1e293b"/>
+    <rect x="80" y="136" width="64" height="36" rx="10" fill="#38bdf8"/>
+    <rect x="168" y="136" width="64" height="36" rx="10" fill="#38bdf8"/>
+    <rect x="24" y="152" width="48" height="56" rx="12" fill="#0f172a"/>
+    <rect x="264" y="152" width="48" height="56" rx="12" fill="#0f172a"/>
+    <circle cx="96" cy="248" r="28" fill="#0f172a"/>
+    <circle cx="224" cy="248" r="28" fill="#0f172a"/>
+    <circle cx="96" cy="248" r="12" fill="#ffcd00"/>
+    <circle cx="224" cy="248" r="12" fill="#ffcd00"/>
+    <path d="M128 80 L208 80 L240 120 L96 120 Z" fill="#0f172a"/>
+    <rect x="152" y="80" width="32" height="96" rx="12" fill="#ffcd00"/>
+    <rect x="180" y="64" width="56" height="28" rx="14" fill="#0f172a"/>
+    <circle cx="236" cy="78" r="10" fill="#ffcd00"/>
+  </g>
+</svg>
