@@ -11,12 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.svg">
 
-    <!-- Vercel Web Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-
     <style>
         :root {
             --bg-color: #0f172a; /* Deep Space Blue */
@@ -526,6 +520,63 @@
             border-radius: 2px; transition: width 0.1s linear;
         }
 
+        /* ADMIN PANEL STYLES */
+        .admin-panel {
+            background: #0f172a;
+            border: 2px solid var(--danger-color);
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .admin-title {
+            color: var(--danger-color);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            text-align: center;
+            border-bottom: 1px solid var(--danger-color);
+            padding-bottom: 10px;
+        }
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+        .delete-btn {
+            background: transparent;
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .delete-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+        .admin-footer-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
         /* --- MOBILE OPTIMIZATION (< 768px) --- */
         @media (max-width: 768px) {
             body {
@@ -650,6 +701,28 @@
                 <button class="start-btn" onclick="finishStory()">Verstanden</button>
             </div>
 
+            <!-- ADMIN OVERLAY -->
+            <div id="adminOverlay" class="overlay" style="display:none; z-index: 50;">
+                <div class="admin-panel">
+                    <div class="admin-title">/// ADMIN KONSOLE ///</div>
+                    
+                    <div id="adminLoginView">
+                        <input type="password" id="adminPassInput" class="highscore-input" placeholder="ACCESS CODE" style="border-color: var(--danger-color); width: 100%;">
+                        <button class="admin-footer-btn" style="width: 100%;" onclick="adminLogin()">ZUGRIFF ANFORDERN</button>
+                    </div>
+
+                    <div id="adminDataView" style="display:none; flex-direction: column; gap: 10px; height: 100%;">
+                        <div class="leaderboard-list" id="adminList" style="flex-grow: 1; min-height: 200px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px;">
+                            <!-- List populated by JS -->
+                        </div>
+                        <button class="admin-footer-btn" onclick="adminResetAll()" style="background: #7f1d1d;">⚠ ALLES LÖSCHEN</button>
+                        <button class="admin-footer-btn" onclick="closeAdmin()" style="background: #334155;">SCHLIESSEN</button>
+                    </div>
+                    
+                    <div id="adminCloseBtn" style="text-align: center; margin-top: 10px; cursor: pointer; color: #64748b; font-size: 0.8rem; text-decoration: underline;" onclick="closeAdmin()">Abbruch</div>
+                </div>
+            </div>
+
             <!-- START SCREEN -->
             <div id="startScreen" class="overlay" style="display: none;">
                 <h1 class="game-title">Straßenwacht<br>Connected</h1>
@@ -746,7 +819,7 @@
                 built with ❤️ by marcus
             </div>
             <div style="opacity: 0.5; font-family: monospace;">
-                ADAC_DEV_BUILD_2026
+                ADAC_DEV_BUILD_2026 <span onclick="toggleAdmin()" style="cursor: pointer; margin-left: 8px;" title="Admin Access">[⚡]</span>
             </div>
         </div>
     </div>
@@ -773,6 +846,7 @@
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const diagnosticOverlay = document.getElementById('diagnosticOverlay');
+        const adminOverlay = document.getElementById('adminOverlay');
         
         // UI Elements
         const scoreBoard = document.getElementById('scoreBoard');
@@ -790,6 +864,13 @@
         const powerupDisplay = document.getElementById('powerupDisplay');
         const powerupIcon = document.getElementById('powerupIcon');
         const powerupTimer = document.getElementById('powerupTimer');
+        
+        // Admin Elements
+        const adminPassInput = document.getElementById('adminPassInput');
+        const adminLoginView = document.getElementById('adminLoginView');
+        const adminDataView = document.getElementById('adminDataView');
+        const adminList = document.getElementById('adminList');
+        const adminCloseBtn = document.getElementById('adminCloseBtn');
         
         // Diagnostic Elements
         const diagContainer = document.getElementById('diagContainer');
@@ -1016,6 +1097,113 @@
             });
             target.innerHTML = html;
         }
+
+        /* --- ADMIN LOGIC --- */
+        let adminPassword = "";
+
+        function toggleAdmin() {
+            adminOverlay.style.display = 'flex';
+            adminLoginView.style.display = 'block';
+            adminDataView.style.display = 'none';
+            adminPassInput.value = "";
+            adminCloseBtn.style.display = "block"; // Allow cancel at login
+        }
+
+        function closeAdmin() {
+            adminOverlay.style.display = 'none';
+        }
+
+        async function adminLogin() {
+            const pwd = adminPassInput.value;
+            if(!pwd) return;
+            adminPassword = pwd;
+
+            try {
+                // Fetch data using password for auth
+                const res = await fetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPassword })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    renderAdminList(data);
+                    adminLoginView.style.display = 'none';
+                    adminDataView.style.display = 'flex';
+                    adminCloseBtn.style.display = "none"; // Hide bottom link, show button inside
+                } else {
+                    alert("ZUGRIFF VERWEIGERT.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Verbindungsfehler.");
+            }
+        }
+
+        function renderAdminList(data) {
+            if (!data || data.length === 0) {
+                adminList.innerHTML = '<div style="color:#94a3b8; text-align:center;">Keine Einträge</div>';
+                return;
+            }
+            let html = '';
+            data.forEach(entry => {
+                const name = entry.name || entry.member;
+                html += `
+                    <div class="admin-item">
+                        <span>${name} (${entry.score})</span>
+                        <button class="delete-btn" onclick="adminDelete('${name}')">🗑️</button>
+                    </div>
+                `;
+            });
+            adminList.innerHTML = html;
+        }
+
+        async function adminDelete(member) {
+            if(!confirm(`${member} wirklich löschen?`)) return;
+
+            try {
+                const res = await fetch('/api/admin/delete-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPassword, member: member })
+                });
+
+                if(res.ok) {
+                    // Refresh list
+                    const refreshRes = await fetch('/api/admin/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: adminPassword })
+                    });
+                    const data = await refreshRes.json();
+                    renderAdminList(data);
+                    // Also refresh game leaderboard in background
+                    fetchLeaderboard();
+                } else {
+                    alert("Löschen fehlgeschlagen.");
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function adminResetAll() {
+            if(!confirm("WARNUNG: ALLE HIGHSCORES WERDEN UNWIDERRUFLICH GELÖSCHT!")) return;
+            
+            try {
+                const res = await fetch('/api/admin/reset-highscores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPassword })
+                });
+
+                if(res.ok) {
+                    alert("DATENBANK BEREINIGT.");
+                    adminList.innerHTML = "";
+                    fetchLeaderboard();
+                }
+            } catch(e) { console.error(e); }
+        }
+
 
         /* --- DIAGNOSTIC MODE LOGIC --- */
 
@@ -1349,6 +1537,13 @@
         }
 
         function handleInput(type, code) {
+            // ADMIN INPUT
+            if (adminOverlay.style.display === 'flex' && type === 'keydown') {
+                if (code === 'Enter') adminLogin(); // Better UX on desktop
+                if (code === 'Escape') closeAdmin();
+                return;
+            }
+
             // DIAGNOSTIC MODE CONTROLS
             if ((gameState === 'DIAGNOSING' || gameState === 'BOOTING') && type === 'keydown') {
                 if (gameState === 'BOOTING') return; // Lock inputs during boot
@@ -1604,11 +1799,5 @@
         initGame();
 
     </script>
-
-    <!-- Vercel Speed Insights -->
-    <script>
-        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
 </body>
 </html>
