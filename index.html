@@ -320,7 +320,6 @@
         const repairFill = document.getElementById('repairBarFill');
         const startLeaderboard = document.getElementById('startLeaderboard');
         const newHighscoreForm = document.getElementById('newHighscoreForm');
-        const playerNameInput = document.getElementById('playerNameInput');
 
         // Status Variablen
         let gameState = 'START'; // START, PLAYING, REPAIRING, GAMEOVER
@@ -374,8 +373,14 @@
             }
         }
 
+        function getPlayerNameInput() {
+            return document.getElementById('playerNameInput');
+        }
+
         async function submitScore() {
-            const name = playerNameInput.value.trim();
+            const input = getPlayerNameInput();
+            if (!input) return;
+            const name = input.value.trim();
             if (!name) return;
 
             try {
