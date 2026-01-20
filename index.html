@@ -17,6 +17,10 @@
             --danger-color: #ef4444;
             --success-color: #10b981;
             --tech-blue: #3b82f6; /* Für den Connected Car Modus */
+            
+            /* Charakter Farben */
+            --skin-color: #ffdbac; /* Etwas natürlicherer Hautton */
+            --hair-color: #262626; 
         }
 
         * {
@@ -77,7 +81,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(15, 23, 42, 0.9); /* Fast undurchsichtig */
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
             z-index: 20;
             padding: 20px;
@@ -127,6 +131,49 @@
             letter-spacing: 2px;
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 5px;
+        }
+
+        /* CSS CHARACTER (Pannenfahrer SVG) */
+        .driver-container {
+            width: 200px;
+            height: 220px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .driver-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.4));
+        }
+
+        /* Namensschild Animation */
+        .name-tag {
+            background: #ffffff;
+            color: #0f172a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            position: absolute;
+            /* Positioniert relativ zum SVG Body */
+            top: 155px; 
+            right: 45px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0); /* Startet unsichtbar */
+            max-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid #cbd5e1;
+            z-index: 10;
+        }
+        
+        .name-tag.visible {
+            transform: scale(1) rotate(-3deg);
         }
 
         /* Leaderboard Panel */
@@ -381,10 +428,65 @@
                 <div id="repairBarFill"></div>
             </div>
 
+            <!-- NAME ENTRY SCREEN (Onboarding) -->
+            <div id="nameEntryScreen" class="overlay" style="display: none;">
+                <h1 class="game-title" style="font-size: 2.5rem; margin-bottom: 20px;">Willkommen<br>im Team</h1>
+                <p style="margin-bottom: 30px; text-align: center;">Wie ist dein Name, Pannenfahrer?</p>
+                
+                <!-- SVG Character (Freundlicher, ohne Skimaske) -->
+                <div class="driver-container">
+                    <svg class="driver-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Body (ADAC Yellow) -->
+                        <path d="M50 220 L50 160 Q50 120 100 120 Q150 120 150 160 L150 220 Z" fill="#ffcd00" />
+                        <!-- Collar (Dark) -->
+                        <path d="M80 120 L80 140 Q100 150 120 140 L120 120" fill="#1e293b" />
+                        
+                        <!-- Neck -->
+                        <rect x="85" y="100" width="30" height="30" fill="#ffdbac" />
+
+                        <!-- Head Shape -->
+                        <rect x="65" y="40" width="70" height="90" rx="25" fill="#ffdbac" />
+                        
+                        <!-- Ears -->
+                        <circle cx="60" cy="85" r="8" fill="#ffdbac" />
+                        <circle cx="140" cy="85" r="8" fill="#ffdbac" />
+                        
+                        <!-- Hair (Dark, friendly cut) -->
+                        <!-- Top Hair -->
+                        <path d="M55 60 Q60 20 100 20 Q140 20 145 60 L145 70 Q145 50 135 50 L65 50 Q55 50 55 70 Z" fill="#262626" />
+                        <!-- Sideburns (distinct from beard) -->
+                        <path d="M55 60 L65 60 L65 90 L55 80 Z" fill="#262626" />
+                        <path d="M145 60 L135 60 L135 90 L145 80 Z" fill="#262626" />
+
+                        <!-- No Beard (Clean Shaven) -->
+                        
+                        <!-- Eyes (Friendly) -->
+                        <circle cx="82" cy="80" r="5" fill="#1e293b" />
+                        <circle cx="118" cy="80" r="5" fill="#1e293b" />
+                        <!-- Eyebrows -->
+                        <path d="M75 72 Q82 70 89 72" fill="none" stroke="#262626" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M111 72 Q118 70 125 72" fill="none" stroke="#262626" stroke-width="3" stroke-linecap="round"/>
+
+                        <!-- Nose -->
+                        <path d="M95 85 L95 95 L105 95" fill="none" stroke="#dca685" stroke-width="2" stroke-linecap="round"/>
+                        
+                        <!-- Smile (Visible above beard) -->
+                        <path d="M90 105 Q100 110 110 105" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    
+                    <div id="driverBadge" class="name-tag"></div>
+                </div>
+
+                <input type="text" id="initialNameInput" class="highscore-input" placeholder="Name eingeben" maxlength="12" oninput="updateNameBadge()">
+                <button class="start-btn" onclick="saveNameAndStart()">Weiter</button>
+            </div>
+
             <!-- START SCREEN -->
-            <div id="startScreen" class="overlay">
+            <div id="startScreen" class="overlay" style="display: none;">
                 <h1 class="game-title">Straßenwacht<br>Connected</h1>
                 <div class="game-subtitle">Digital liegenbleiben.</div>
+                
+                <p id="welcomeText" style="color: var(--accent-color); font-weight: bold; margin-bottom: 10px;">Hallo, Fahrer!</p>
 
                 <div class="leaderboard-panel">
                     <div class="leaderboard-header">/// TOP EINSATZKRÄFTE ///</div>
@@ -397,6 +499,9 @@
                 
                 <div style="margin-top: 20px; font-size: 0.8rem; color: #64748b;">
                     Steuerung: Pfeiltasten oder A / D
+                </div>
+                <div style="margin-top: 10px; font-size: 0.75rem; color: #ef4444; cursor: pointer; text-decoration: underline;" onclick="logout()">
+                    Abmelden / Anderer Fahrer
                 </div>
             </div>
 
@@ -432,11 +537,8 @@
                 <h2 id="gameOverTitle" style="color: var(--danger-color); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 10px;">Unfall!</h2>
                 <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 20px;">Score: <span id="finalScore" style="color: white; font-weight: bold;">0</span></p>
                 
-                <div id="newHighscoreForm" style="display: none; width: 100%; text-align: center;">
-                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">🏆 Neuer Highscore!</p>
-                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="DEIN NAME" maxlength="10">
-                    <br>
-                    <button class="start-btn" style="font-size: 1rem; padding: 10px 24px;" onclick="submitScore()">Speichern</button>
+                <div id="submittingScoreText" style="color: var(--accent-color); font-family: monospace; margin-bottom: 15px; display: none;">
+                    > Sende Daten an Zentrale...
                 </div>
 
                 <div id="gameOverLeaderboard" class="leaderboard-panel" style="display: none;">
@@ -466,6 +568,7 @@
         const container = document.getElementById('gameWrapper');
         
         // Screens
+        const nameEntryScreen = document.getElementById('nameEntryScreen');
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const diagnosticOverlay = document.getElementById('diagnosticOverlay');
@@ -476,10 +579,12 @@
         const repairBar = document.getElementById('repairBarContainer');
         const repairFill = document.getElementById('repairBarFill');
         const startLeaderboard = document.getElementById('startLeaderboard');
-        const newHighscoreForm = document.getElementById('newHighscoreForm');
-        const playerNameInput = document.getElementById('playerNameInput');
+        const initialNameInput = document.getElementById('initialNameInput');
+        const driverBadge = document.getElementById('driverBadge');
+        const welcomeText = document.getElementById('welcomeText');
         const gameOverLeaderboard = document.getElementById('gameOverLeaderboard');
         const gameOverLeaderboardList = document.getElementById('gameOverLeaderboardList');
+        const submittingScoreText = document.getElementById('submittingScoreText');
         
         // Diagnostic Elements
         const diagContainer = document.getElementById('diagContainer');
@@ -489,126 +594,44 @@
         const diagOptionsList = document.getElementById('diagOptionsList');
 
         // Game State
-        let gameState = 'START'; // START, PLAYING, REPAIRING, BOOTING, DIAGNOSING, GAMEOVER
+        let gameState = 'INIT'; 
         let score = 0;
         let roadOffset = 0;
         let baseSpeed = 5; 
         let gameSpeed = baseSpeed;
         
         let currentLeaderboard = [];
-        let repairsCount = 0; // Counter für Boss-Event
+        let repairsCount = 0;
+        let currentPlayerName = null;
         
         // Diagnostic Logic
         let currentDiagQuestion = null;
         let diagSelectedIndex = 0;
 
-        // Fragen Katalog (Connected Car Challenge) - ERWEITERT
+        // Fragen Katalog (Connected Car Challenge)
         const diagnosticQuestions = [
-            {
-                scenario: "Motor startet nicht, Licht & Radio funktionieren nicht. Kein Anlasser-Geräusch.",
-                options: ["Lichtmaschine defekt", "Batterie tiefentladen", "Zündkerzen verschlissen", "Tank leer"],
-                correct: 1
-            },
-            {
-                scenario: "Motor überhitzt, weißer Rauch steigt aus der Motorhaube auf.",
-                options: ["Kühlmittelverlust", "Zu wenig Öl", "Reifenpanne", "Klimaanlage defekt"],
-                correct: 0
-            },
-            {
-                scenario: "Warnleuchte 'Ölkanne' leuchtet rot auf.",
-                options: ["Wischwasser leer", "Zu viel Öl", "Öldruck zu niedrig", "Bremsbeläge abgenutzt"],
-                correct: 2
-            },
-            {
-                scenario: "Fahrzeug zieht beim Bremsen stark nach links.",
-                options: ["Radio zu laut", "Bremssattel fest", "Batterie schwach", "Auspuff undicht"],
-                correct: 1
-            },
-            {
-                scenario: "Blaue Wolke kommt beim Gasgeben aus dem Auspuff.",
-                options: ["Motor verbrennt Öl", "Wasser im Tank", "Katalysator neu", "Reifen drehen durch"],
-                correct: 0
-            },
-            {
-                scenario: "Lautes Klackern vorne beim Einlenken und Anfahren.",
-                options: ["Hupe defekt", "Antriebswelle defekt", "Fenster offen", "Scheibenwischer trocken"],
-                correct: 1
-            },
-            {
-                scenario: "Motor läuft unrund, Motorkontrollleuchte blinkt gelb.",
-                options: ["Zündaussetzer", "Reifen platt", "Kofferraum offen", "Tank voll"],
-                correct: 0
-            },
-            {
-                scenario: "Reifen sind an den Außenkanten stark abgefahren.",
-                options: ["Zu hoher Luftdruck", "Falsche Spur/Sturz", "Zu wenig Profil", "Felge rostig"],
-                correct: 1
-            },
-            {
-                scenario: "Motor geht während der Fahrt einfach aus und springt nicht mehr an.",
-                options: ["Lichtmaschine/Generator", "Kühlwasser leer", "Bremslicht defekt", "Radio Sicherung"],
-                correct: 0
-            },
-            {
-                scenario: "Schwarzer Rauch aus dem Auspuff bei Diesel-Fahrzeug.",
-                options: ["Luftfilter verstopft/Turbo", "AdBlue leer", "Falsch getankt (Benzin)", "Zündkerzen nass"],
-                correct: 0
-            },
-            {
-                scenario: "Kupplungspedal bleibt am Boden liegen.",
-                options: ["Seilzug/Hydraulik defekt", "Gaspedal klemmt", "Bremsflüssigkeit voll", "Batterie leer"],
-                correct: 0
-            },
-            {
-                scenario: "Fahrzeug vibriert stark ab 100 km/h im Lenkrad.",
-                options: ["Unwucht in Rädern", "Motorlager defekt", "Keilriemen lose", "Auspuff lose"],
-                correct: 0
-            },
-            {
-                scenario: "Süßlicher Geruch im Innenraum, Scheiben beschlagen.",
-                options: ["Wärmetauscher undicht", "Klimaanlage leer", "Duftbaum verfallen", "Fenster offen"],
-                correct: 0
-            },
-            {
-                scenario: "Auto springt morgens schlecht an, 'Vorglüh'-Lampe blinkt.",
-                options: ["Glühkerzen defekt", "Turbolader defekt", "Ölwechsel fällig", "Reifendruck niedrig"],
-                correct: 0
-            },
-            {
-                scenario: "Gangschaltung lässt sich bei laufendem Motor schwer einlegen.",
-                options: ["Kupplung trennt nicht", "Handbremse angezogen", "Lenkradsperre drin", "Licht an"],
-                correct: 0
-            },
-            {
-                scenario: "Metallisches Schleifen beim Bremsen.",
-                options: ["Bremsbeläge runter", "Rost an der Tür", "Auspuff schleift", "Radlager defekt"],
-                correct: 0
-            },
-            {
-                scenario: "ESP-Leuchte brennt dauerhaft.",
-                options: ["ABS/Drehzahlsensor", "Reifen zu neu", "Motor zu warm", "Radio kein Empfang"],
-                correct: 0
-            },
-            {
-                scenario: "Motor ruckelt stark beim Beschleunigen.",
-                options: ["Kraftstofffilter zu", "Scheibenwasser leer", "Innenraumlicht an", "Reifen unwuchtig"],
-                correct: 0
-            },
-            {
-                scenario: "Schlüssel dreht sich nicht im Zündschloss.",
-                options: ["Lenkradschloss eingerastet", "Falscher Schlüssel", "Batterie leer", "Anlasser defekt"],
-                correct: 0
-            },
-            {
-                scenario: "Fahrzeugbeleuchtung flackert im Leerlauf.",
-                options: ["Spannungsregler defekt", "Birne locker", "Radio zu laut", "Sicherung durch"],
-                correct: 0
-            }
+            { scenario: "Motor startet nicht, Licht & Radio funktionieren nicht. Kein Anlasser-Geräusch.", options: ["Lichtmaschine defekt", "Batterie tiefentladen", "Zündkerzen verschlissen", "Tank leer"], correct: 1 },
+            { scenario: "Motor überhitzt, weißer Rauch steigt aus der Motorhaube auf.", options: ["Kühlmittelverlust", "Zu wenig Öl", "Reifenpanne", "Klimaanlage defekt"], correct: 0 },
+            { scenario: "Warnleuchte 'Ölkanne' leuchtet rot auf.", options: ["Wischwasser leer", "Zu viel Öl", "Öldruck zu niedrig", "Bremsbeläge abgenutzt"], correct: 2 },
+            { scenario: "Fahrzeug zieht beim Bremsen stark nach links.", options: ["Radio zu laut", "Bremssattel fest", "Batterie schwach", "Auspuff undicht"], correct: 1 },
+            { scenario: "Blaue Wolke kommt beim Gasgeben aus dem Auspuff.", options: ["Motor verbrennt Öl", "Wasser im Tank", "Katalysator neu", "Reifen drehen durch"], correct: 0 },
+            { scenario: "Lautes Klackern vorne beim Einlenken und Anfahren.", options: ["Hupe defekt", "Antriebswelle defekt", "Fenster offen", "Scheibenwischer trocken"], correct: 1 },
+            { scenario: "Motor läuft unrund, Motorkontrollleuchte blinkt gelb.", options: ["Zündaussetzer", "Reifen platt", "Kofferraum offen", "Tank voll"], correct: 0 },
+            { scenario: "Reifen sind an den Außenkanten stark abgefahren.", options: ["Zu hoher Luftdruck", "Falsche Spur/Sturz", "Zu wenig Profil", "Felge rostig"], correct: 1 },
+            { scenario: "Motor geht während der Fahrt einfach aus und springt nicht mehr an.", options: ["Lichtmaschine/Generator", "Kühlwasser leer", "Bremslicht defekt", "Radio Sicherung"], correct: 0 },
+            { scenario: "Schwarzer Rauch aus dem Auspuff bei Diesel-Fahrzeug.", options: ["Luftfilter verstopft/Turbo", "AdBlue leer", "Falsch getankt (Benzin)", "Zündkerzen nass"], correct: 0 },
+            { scenario: "Kupplungspedal bleibt am Boden liegen.", options: ["Seilzug/Hydraulik defekt", "Gaspedal klemmt", "Bremsflüssigkeit voll", "Batterie leer"], correct: 0 },
+            { scenario: "Fahrzeug vibriert stark ab 100 km/h im Lenkrad.", options: ["Unwucht in Rädern", "Motorlager defekt", "Keilriemen lose", "Auspuff lose"], correct: 0 },
+            { scenario: "Süßlicher Geruch im Innenraum, Scheiben beschlagen.", options: ["Wärmetauscher undicht", "Klimaanlage leer", "Duftbaum verfallen", "Fenster offen"], correct: 0 },
+            { scenario: "Auto springt morgens schlecht an, 'Vorglüh'-Lampe blinkt.", options: ["Glühkerzen defekt", "Turbolader defekt", "Ölwechsel fällig", "Reifendruck niedrig"], correct: 0 },
+            { scenario: "Gangschaltung lässt sich bei laufendem Motor schwer einlegen.", options: ["Kupplung trennt nicht", "Handbremse angezogen", "Lenkradsperre drin", "Licht an"], correct: 0 },
+            { scenario: "Metallisches Schleifen beim Bremsen.", options: ["Bremsbeläge runter", "Rost an der Tür", "Auspuff schleift", "Radlager defekt"], correct: 0 },
+            { scenario: "ESP-Leuchte brennt dauerhaft.", options: ["ABS/Drehzahlsensor", "Reifen zu neu", "Motor zu warm", "Radio kein Empfang"], correct: 0 },
+            { scenario: "Motor ruckelt stark beim Beschleunigen.", options: ["Kraftstofffilter zu", "Scheibenwasser leer", "Innenraumlicht an", "Reifen unwuchtig"], correct: 0 },
+            { scenario: "Schlüssel dreht sich nicht im Zündschloss.", options: ["Lenkradschloss eingerastet", "Falscher Schlüssel", "Batterie leer", "Anlasser defekt"], correct: 0 },
+            { scenario: "Fahrzeugbeleuchtung flackert im Leerlauf.", options: ["Spannungsregler defekt", "Birne locker", "Radio zu laut", "Sicherung durch"], correct: 0 }
         ];
         
-        // Initial Fetch
-        fetchLeaderboard();
-
         // Repair Logic
         let repairTimer = 0;
         const repairDuration = 50; 
@@ -621,6 +644,64 @@
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+
+        /* --- SESSION MANAGEMENT --- */
+        
+        function initGame() {
+            const storedName = localStorage.getItem('pannenfahrerName');
+            
+            if (storedName) {
+                currentPlayerName = storedName;
+                welcomeText.textContent = `Hallo, ${currentPlayerName}!`;
+                showStartScreen();
+            } else {
+                showNameEntry();
+            }
+        }
+
+        function showNameEntry() {
+            nameEntryScreen.style.display = 'flex';
+            startScreen.style.display = 'none';
+            initialNameInput.focus();
+        }
+
+        function showStartScreen() {
+            nameEntryScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            fetchLeaderboard();
+        }
+
+        function updateNameBadge() {
+            const val = initialNameInput.value;
+            driverBadge.textContent = val;
+            if (val.trim().length > 0) {
+                driverBadge.classList.add('visible');
+            } else {
+                driverBadge.classList.remove('visible');
+            }
+        }
+
+        function saveNameAndStart() {
+            const name = initialNameInput.value.trim();
+            if (!name) return;
+            
+            // Normalize name (e.g. capitalize first letter)
+            const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
+            
+            localStorage.setItem('pannenfahrerName', cleanName);
+            currentPlayerName = cleanName;
+            welcomeText.textContent = `Hallo, ${currentPlayerName}!`;
+            
+            showStartScreen();
+        }
+
+        function logout() {
+            localStorage.removeItem('pannenfahrerName');
+            currentPlayerName = null;
+            initialNameInput.value = '';
+            driverBadge.classList.remove('visible');
+            initGame();
+        }
 
         /* --- API FUNCTIONS --- */
         
@@ -642,31 +723,50 @@
             }
         }
 
-        async function submitScore() {
-            const name = playerNameInput.value.trim();
-            if (!name) return;
+        async function autoSubmitScore() {
+            if (!currentPlayerName || score <= 0) {
+                // Just show leaderboard if no score or name error
+                gameOverLeaderboard.style.display = 'block';
+                renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
+                return;
+            }
+
+            submittingScoreText.style.display = 'block';
+
+            // Check if player already has a higher score locally (opt.)
+            // We trust the backend to handle it, but can check visually
+            const existingEntry = currentLeaderboard.find(entry => (entry.name || entry.member) === currentPlayerName);
+            if (existingEntry && existingEntry.score >= score) {
+                submittingScoreText.textContent = `> Dein Rekord (${existingEntry.score}) bleibt bestehen.`;
+                gameOverLeaderboard.style.display = 'block';
+                renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
+                return;
+            }
 
             try {
                 const res = await fetch('/api/submit-score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, score: score })
+                    body: JSON.stringify({ name: currentPlayerName, score: score })
                 });
                 
                 if (res.ok) {
-                    newHighscoreForm.style.display = 'none';
-                    gameOverLeaderboard.style.display = 'block';
+                    submittingScoreText.textContent = "> DATEN ÜBERTRAGEN. HIGHSCORE!";
+                    submittingScoreText.style.color = "var(--success-color)";
+                    
                     const newData = await (await fetch('/api/highscores')).json();
                     currentLeaderboard = newData;
+                    
+                    gameOverLeaderboard.style.display = 'block';
                     renderLeaderboard(newData, gameOverLeaderboardList);
                 } else {
-                    alert('Fehler beim Speichern.');
+                    submittingScoreText.textContent = "> FEHLER BEI DER ÜBERTRAGUNG.";
                 }
             } catch (e) {
                 console.error(e);
-                newHighscoreForm.style.display = 'none';
+                submittingScoreText.textContent = "> OFFLINE MODUS.";
                 gameOverLeaderboard.style.display = 'block';
-                renderLeaderboard([{name: name, score: score}, ...currentLeaderboard], gameOverLeaderboardList);
+                renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
             }
         }
 
@@ -688,19 +788,6 @@
             target.innerHTML = html;
         }
 
-        function checkHighscore(finalScore) {
-            const lowestScore = currentLeaderboard.length < 10 ? -1 : currentLeaderboard[currentLeaderboard.length - 1].score;
-            gameOverLeaderboard.style.display = 'none';
-            if (finalScore > lowestScore && finalScore > 0) {
-                newHighscoreForm.style.display = 'block';
-                setTimeout(() => document.getElementById('playerNameInput').focus(), 100);
-            } else {
-                newHighscoreForm.style.display = 'none';
-                gameOverLeaderboard.style.display = 'block';
-                renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
-            }
-        }
-
         /* --- DIAGNOSTIC MODE LOGIC --- */
 
         async function triggerDiagnosticMode() {
@@ -709,11 +796,11 @@
             bootSequenceDiv.style.display = 'block';
             diagContainer.style.display = 'none';
             
-            // Boot Animation - UPDATED TEXT
+            // Boot Animation
             const lines = [
                 "> ESTABLISHING SECURE CONNECTION...",
                 "> VERBINDUNG HERGESTELLT.",
-                "> INITIALISIERE AMD...", // Insider Update
+                "> INITIALISIERE AMD...", 
                 "> FEHLERCODES ERKANNT.",
                 "> BITTE DIAGNOSTIZIEREN SIE!"
             ];
@@ -752,7 +839,7 @@
                         clearInterval(interval);
                         resolve();
                     }
-                }, 30); // Typing speed
+                }, 30); 
             });
         }
 
@@ -762,7 +849,7 @@
                 const el = document.createElement('div');
                 el.className = `diag-option ${idx === diagSelectedIndex ? 'selected' : ''}`;
                 el.innerHTML = `<span class="diag-option-key">${idx + 1}</span> ${opt}`;
-                el.onclick = () => { diagSelectedIndex = idx; renderDiagOptions(); }; // Mouse support
+                el.onclick = () => { diagSelectedIndex = idx; renderDiagOptions(); };
                 diagOptionsList.appendChild(el);
             });
         }
@@ -774,10 +861,10 @@
             
             if (isCorrect) {
                 score += 50;
-                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM RECOVERED! +50", "#10b981")); // Green
+                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM RECOVERED! +50", "#10b981")); 
             } else {
                 score -= 50;
-                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM FAILURE! -50", "#ef4444")); // Red
+                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM FAILURE! -50", "#ef4444")); 
             }
             
             scoreBoard.textContent = score;
@@ -890,8 +977,7 @@
             cars.push(new Car(Math.random() < 0.35));
             
             // PROGRESSIVE DIFFICULTY
-            // Decrease spawn time based on repairs
-            const difficultyFactor = Math.min(0.5, repairsCount * 0.02); // Cap at 50% reduction
+            const difficultyFactor = Math.min(0.5, repairsCount * 0.02); 
             const minTime = 700 * (1 - difficultyFactor);
             const variance = 900 * (1 - difficultyFactor);
             setTimeout(spawnCar, Math.random() * variance + minTime);
@@ -918,7 +1004,17 @@
                     if (document.activeElement.tagName === 'INPUT') return;
                     resetGame();
                 }
-                if (gameState === 'START') startGame();
+                
+                // Start with Space or Enter only if we are in Start Screen
+                if (gameState === 'START' && (code === 'Space' || code === 'Enter')) {
+                    startGame();
+                }
+                
+                // Allow enter on name input
+                if (nameEntryScreen.style.display === 'flex' && code === 'Enter') {
+                    saveNameAndStart();
+                }
+                
                 if (code === 'ArrowLeft' || code === 'KeyA') player.moveLeft = true;
                 if (code === 'ArrowRight' || code === 'KeyD') player.moveRight = true;
             }
@@ -953,7 +1049,7 @@
             player.x = canvas.width/2 - player.width/2; player.y = canvas.height - 130;
             cars = []; particles = []; floatingTexts = []; score = 0;
             repairsCount = 0;
-            gameSpeed = baseSpeed; // Reset speed
+            gameSpeed = baseSpeed; 
             scoreBoard.textContent = 0; scoreBoard.style.color = '#fff';
             spawnCar(); animate();
         }
@@ -985,13 +1081,11 @@
             currentTarget = null; 
             scoreBoard.textContent = score; 
             
-            // PROGRESSIVE DIFFICULTY: Increase speed every 5 repairs
             if (repairsCount % 5 === 0) {
                  gameSpeed = Math.min(12, baseSpeed + (repairsCount / 5) * 0.5);
                  floatingTexts.push(new FloatingText(player.x, player.y - 80, "LEVEL UP! FASTER!", "#f59e0b"));
             }
 
-            // Trigger Diagnostic Mode every 20 repairs (UPDATED)
             if (repairsCount > 0 && repairsCount % 20 === 0) {
                 triggerDiagnosticMode();
             } else {
@@ -1005,7 +1099,10 @@
             gameState = 'GAMEOVER'; finalScoreDisplay.textContent = score;
             const titleElement = document.getElementById('gameOverTitle');
             if (titleElement) titleElement.textContent = reason || "Unfall!";
-            checkHighscore(score);
+            
+            // Auto-Submit Score without prompt
+            autoSubmitScore();
+
             gameOverScreen.style.display = 'flex'; repairBar.style.display = 'none';
             diagnosticOverlay.style.display = 'none';
         }
@@ -1061,6 +1158,9 @@
 
         // Init
         resizeCanvas(); player.y = canvas.height - 130; player.x = canvas.width/2 - 22; draw();
+        
+        // Start Check
+        initGame();
 
     </script>
 </body>
