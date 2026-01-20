@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pannenhilfe Simulator</title>
+    <title>Straßenwacht: Connected</title>
     <style>
         :root {
-            --bg-color: #111827; /* Dunkler Gaming-Hintergrund */
-            --card-bg: #1f2937;
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --accent-color: #ef4444;
+            --bg-color: #0f172a; /* Deep Space Blue */
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            /* Neues Gelb Schema (#ffcd00 Basis) */
+            --accent-color: #ffcd00; 
+            --accent-dark: #e6b800; /* Etwas dunkler für Kontraste */
+            --accent-glow: rgba(255, 205, 0, 0.5);
+            
+            --danger-color: #ef4444;
             --success-color: #10b981;
-            --warn-color: #f59e0b;
         }
 
         * {
@@ -26,55 +29,34 @@
             background-color: var(--bg-color);
             display: flex;
             justify-content: center;
-            align-items: center; /* Zentriert für Game-Fokus */
+            align-items: center;
             min-height: 100vh;
             color: var(--text-primary);
             padding: 20px;
+            /* Retro Grid Hintergrund */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
         .game-card {
             background: var(--card-bg);
             width: 100%;
-            max-width: 1000px;
-            border-radius: 16px; /* Etwas runder */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
             overflow: hidden;
-            border: 1px solid #374151;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Kopfzeile */
-        .card-header {
-            padding: 24px 32px;
-            background-color: #1f2937;
-            border-bottom: 1px solid #374151;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #f3f4f6;
-            letter-spacing: 0.5px;
-        }
-
-        .status-badge {
-            background: #374151;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            color: #d1d5db;
-            font-weight: 500;
+            position: relative;
         }
 
         /* Spiel Bereich */
         .game-container {
             width: 100%;
-            height: 600px; /* Größer für mehr Spielfläche */
-            background-color: #374151;
+            height: 600px;
+            background-color: #334155;
             position: relative;
             overflow: hidden;
             cursor: pointer;
@@ -86,226 +68,253 @@
             height: 100%;
         }
 
+        /* --- UI OVERLAYS (Retro Style) --- */
         .overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            background: rgba(31, 41, 55, 0.95); /* Dunkles Overlay */
-            padding: 32px 48px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            pointer-events: auto; /* Wichtig für Input Felder */
-            z-index: 10;
-            border: 1px solid #4b5563;
-            min-width: 300px;
-        }
-
-        .overlay h2 {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            color: #f3f4f6;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9); /* Fast undurchsichtig */
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            padding: 20px;
+            transition: opacity 0.3s;
         }
         
-        .overlay p {
-            color: #d1d5db;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        .kbd {
-            background: #4b5563;
-            border: 1px solid #6b7280;
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-family: monospace;
-            font-weight: bold;
-            color: #f9fafb;
-            box-shadow: 0 3px 0 #1f2937;
-            display: inline-block;
-            margin: 0 2px;
-        }
-
-        .card-footer {
-            padding: 20px 32px;
-            background-color: #1f2937;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #374151;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .controls-hint {
-            display: flex;
-            gap: 16px;
-        }
-
-        /* HUD Elemente */
-        #scoreBoard {
+        /* Scanline Effekt */
+        .overlay::after {
+            content: "";
             position: absolute;
-            top: 24px;
-            right: 24px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Animierter Titel */
+        @keyframes glowPulse {
+            0%, 100% { text-shadow: 0 0 20px var(--accent-glow); transform: scale(1); }
+            50% { text-shadow: 0 0 40px var(--accent-glow); transform: scale(1.02); }
+        }
+
+        .game-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1;
+            /* Gradient Text */
+            background: linear-gradient(to bottom right, #ffcd00, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255, 205, 0, 0.3));
+            animation: glowPulse 3s infinite ease-in-out;
+        }
+
+        .game-subtitle {
             font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            text-transform: lowercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+        }
+
+        /* Leaderboard Panel */
+        .leaderboard-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 380px;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-header {
+            text-transform: uppercase;
+            font-size: 0.75rem;
             font-weight: bold;
-            font-size: 24px;
-            color: #fff;
-            text-shadow: 2px 2px 0 #000;
-            pointer-events: none;
-            transition: color 0.2s;
-            z-index: 5;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 5px;
         }
 
-        #missionText {
-            position: absolute;
-            top: 24px;
-            left: 24px;
-            color: white;
-            font-weight: bold;
-            background: rgba(0,0,0,0.6);
-            padding: 8px 16px;
-            border-radius: 6px;
-            pointer-events: none;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Reparatur Balken */
-        #repairBarContainer {
-            position: absolute;
-            width: 60px;
-            height: 8px;
-            background: #1f2937;
-            border: 1px solid white;
-            border-radius: 4px;
-            display: none;
-            pointer-events: none;
-            z-index: 5;
-        }
-        #repairBarFill {
-            width: 0%;
-            height: 100%;
-            background: var(--success-color);
-            border-radius: 2px;
-            transition: width 0.1s linear;
-        }
-
-        /* Leaderboard Styles */
         .leaderboard-list {
-            text-align: left;
-            margin: 20px 0;
-            background: rgba(0,0,0,0.2);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #4b5563;
-            max-height: 200px;
+            max-height: 160px;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 transparent;
         }
+
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 10px;
+            font-family: 'Courier New', monospace;
             font-size: 0.9rem;
-            color: #d1d5db;
+            border-radius: 4px;
         }
-        .leaderboard-item:last-child { border-bottom: none; }
-        .leaderboard-rank { width: 30px; color: var(--warn-color); font-weight: bold; }
-        .leaderboard-name { flex-grow: 1; }
-        .leaderboard-score { font-weight: bold; color: var(--success-color); }
+        .leaderboard-item:nth-child(odd) { background: rgba(255,255,255,0.03); }
+        .rank { color: var(--accent-color); font-weight: bold; width: 30px; }
+        .name { flex-grow: 1; color: #cbd5e1; }
+        .score { color: var(--success-color); font-weight: bold; }
 
-        .highscore-input-container {
-            margin-top: 15px;
-            display: none; /* Hidden by default */
-        }
-        .highscore-input {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #4b5563;
-            background: #111827;
-            color: white;
-            width: 70%;
-            margin-right: 5px;
-        }
-        .submit-btn {
-            padding: 8px 16px;
-            background: var(--success-color);
+        /* Start Button / Prompt */
+        .start-btn {
+            background: var(--accent-color);
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: 800;
+            padding: 12px 32px;
+            border-radius: 99px;
             border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            animation: bounce 2s infinite;
         }
-        .submit-btn:hover { opacity: 0.9; }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-5px);}
+            60% {transform: translateY(-3px);}
+        }
+
+        /* Footer */
+        .card-footer {
+            padding: 20px 30px;
+            background-color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        /* Input Styles */
+        .highscore-input {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #475569;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 250px;
+            margin-bottom: 15px;
+        }
+        .highscore-input:focus { outline: 2px solid var(--accent-color); border-color: transparent; }
+
+        /* HUD */
+        #scoreBoard {
+            position: absolute;
+            top: 24px; right: 24px;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            font-size: 28px;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #repairBarContainer {
+            position: absolute; width: 60px; height: 8px;
+            background: #0f172a; border: 1px solid #94a3b8;
+            border-radius: 4px; display: none; pointer-events: none; z-index: 5;
+        }
+        #repairBarFill {
+            width: 0%; height: 100%; background: var(--success-color);
+            border-radius: 2px; transition: width 0.1s linear;
+        }
 
         @media (max-width: 600px) {
-            .game-container { height: 450px; }
-            .card-header { flex-direction: column; gap: 10px; text-align: center; }
-            .controls-hint { display: none; }
-            .card-footer { justify-content: center; }
+            .game-title { font-size: 2.5rem; }
+            .game-container { height: 500px; }
+            .card-footer { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
 </head>
 <body>
 
     <div class="game-card">
-        <div class="card-header">
-            <h1>Pannenhilfe Simulator</h1>
-            <div class="status-badge">v1.1 • Leaderboard Active</div>
-        </div>
-
-        <!-- Spiel Bereich -->
         <div class="game-container" id="gameWrapper">
             <canvas id="gameCanvas"></canvas>
             
-            <div id="scoreBoard">SCORE: 0</div>
-            <div id="missionText">Mission: Hilf den Pannen! ⚠️</div>
+            <div id="scoreBoard">0</div>
             
             <div id="repairBarContainer">
                 <div id="repairBarFill"></div>
             </div>
 
+            <!-- START SCREEN -->
             <div id="startScreen" class="overlay">
-                <h2>Einsatzbereit?</h2>
-                <div class="leaderboard-list" id="startLeaderboard">
-                    <div style="text-align: center; color: #6b7280;">Lade Highscores...</div>
+                <h1 class="game-title">Straßenwacht<br>Connected</h1>
+                <div class="game-subtitle">Digital liegenbleiben.</div>
+
+                <div class="leaderboard-panel">
+                    <div class="leaderboard-header">/// TOP EINSATZKRÄFTE ///</div>
+                    <div class="leaderboard-list" id="startLeaderboard">
+                        <div style="text-align:center; color:#64748b; padding:10px;">Verbinde mit Zentrale...</div>
+                    </div>
                 </div>
-                <p>Fahre zu den <span style="color:var(--warn-color); font-weight:bold;">Pannenautos (⚠️)</span>.</p>
-                <div style="margin-top: 25px;">
-                    <span class="kbd">←</span> <span class="kbd">→</span> Lenken
-                </div>
-                <div style="margin-top: 20px; font-size: 0.9rem; color: #9ca3af;">
-                    Drücke eine Taste zum Starten
+
+                <button class="start-btn" onclick="startGame()">Start Engine</button>
+                
+                <div style="margin-top: 20px; font-size: 0.8rem; color: #64748b;">
+                    Steuerung: Pfeiltasten oder A / D
                 </div>
             </div>
 
+            <!-- GAME OVER SCREEN -->
             <div id="gameOverScreen" class="overlay" style="display: none;">
-                <h2 id="gameOverTitle" style="color: var(--accent-color);">Unfall!</h2>
-                <p>Dein Score: <span id="finalScore" style="font-weight: bold; color: white;">0</span></p>
+                <h2 id="gameOverTitle" style="color: var(--danger-color); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 10px;">Unfall!</h2>
+                <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 20px;">Score: <span id="finalScore" style="color: white; font-weight: bold;">0</span></p>
                 
-                <!-- Highscore Input Form -->
-                <div id="newHighscoreForm" class="highscore-input-container">
-                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 5px;">🏆 Neuer Highscore!</p>
-                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="Dein Name" maxlength="10">
-                    <button class="submit-btn" onclick="submitScore()">Senden</button>
+                <div id="newHighscoreForm" style="display: none; width: 100%; text-align: center;">
+                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">🏆 Neuer Highscore!</p>
+                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="DEIN NAME" maxlength="10">
+                    <br>
+                    <button class="start-btn" style="font-size: 1rem; padding: 10px 24px;" onclick="submitScore()">Speichern</button>
                 </div>
 
-                <div class="leaderboard-list" id="gameOverLeaderboard" style="display: none; margin-top: 15px;"></div>
+                <div id="gameOverLeaderboard" class="leaderboard-panel" style="display: none;">
+                    <div class="leaderboard-header">/// RANGLISTE AKTUALISIERT ///</div>
+                    <div class="leaderboard-list" id="gameOverLeaderboardList"></div>
+                </div>
 
-                <div style="margin-top: 20px;">
-                    <span class="kbd">Leertaste</span> für Neustart
+                <div style="margin-top: 30px;">
+                    <p style="color: #64748b; cursor: pointer; text-decoration: underline;" onclick="resetGame()">Leertaste für Neustart</p>
                 </div>
             </div>
         </div>
 
         <div class="card-footer">
-            <div class="controls-hint">
-                <span>Steuerung: <b>Pfeiltasten</b> oder <b>A / D</b></span>
-            </div>
-            <div style="font-size: 0.8rem; opacity: 0.6;">
+            <div style="font-weight: 600;">
                 built with ❤️ by marcus and his ai team
+            </div>
+            <div style="opacity: 0.5; font-family: monospace;">
+                ADAC_DEV_BUILD_2024
             </div>
         </div>
     </div>
@@ -314,36 +323,40 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('gameWrapper');
+        
+        // Screens
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
+        
+        // UI Elements
         const scoreBoard = document.getElementById('scoreBoard');
         const finalScoreDisplay = document.getElementById('finalScore');
         const repairBar = document.getElementById('repairBarContainer');
         const repairFill = document.getElementById('repairBarFill');
         const startLeaderboard = document.getElementById('startLeaderboard');
         const newHighscoreForm = document.getElementById('newHighscoreForm');
+        const playerNameInput = document.getElementById('playerNameInput');
         const gameOverLeaderboard = document.getElementById('gameOverLeaderboard');
+        const gameOverLeaderboardList = document.getElementById('gameOverLeaderboardList');
 
-        // Status Variablen
-        let gameState = 'START'; // START, PLAYING, REPAIRING, GAMEOVER
+        // Game State
+        let gameState = 'START'; 
         let score = 0;
         let roadOffset = 0;
         let baseSpeed = 5; 
         let gameSpeed = baseSpeed;
-        let frameCount = 0;
         
-        // Highscore Logic
         let currentLeaderboard = [];
-        let isHighscoreSubmission = false;
         
-        // Initial laden
+        // Initial Fetch
         fetchLeaderboard();
 
-        // Reparatur Logic
+        // Repair Logic
         let repairTimer = 0;
         const repairDuration = 50; 
         let currentTarget = null; 
 
+        // Canvas Sizing
         function resizeCanvas() {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -351,330 +364,201 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // --- API Integration (Simuliert falls Backend fehlt) ---
+        /* --- API FUNCTIONS --- */
         
         async function fetchLeaderboard() {
             try {
-                // Versuche vom Backend zu laden
                 const res = await fetch('/api/highscores');
                 if (res.ok) {
                     currentLeaderboard = await res.json();
-                    renderLeaderboard(currentLeaderboard);
-                } else {
-                    throw new Error('API not reachable');
-                }
+                    renderLeaderboard(currentLeaderboard, startLeaderboard);
+                } else { throw new Error('API Offline'); }
             } catch (e) {
-                console.log('Leaderboard Offline Mode');
-                // Fallback für Demo/Offline
                 if(currentLeaderboard.length === 0) {
                     renderLeaderboard([
-                        { name: "Team Lead", score: 100 },
-                        { name: "Bot 1", score: 50 },
-                        { name: "Bot 2", score: 20 }
-                    ]);
+                        { name: "GelberEngel", score: 150 },
+                        { name: "PannenPro", score: 120 },
+                        { name: "TrafficKing", score: 95 }
+                    ], startLeaderboard);
                 }
             }
         }
 
-        function getPlayerNameInput() {
-            return document.getElementById('playerNameInput');
-        }
-
         async function submitScore() {
-            const input = getPlayerNameInput();
-            if (!input) return;
-            const name = input.value.trim();
+            const name = playerNameInput.value.trim();
             if (!name) return;
 
             try {
                 const res = await fetch('/api/submit-score', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name.substring(0, 10), score: score })
+                    body: JSON.stringify({ name: name, score: score })
                 });
                 
                 if (res.ok) {
                     newHighscoreForm.style.display = 'none';
-                    if (gameOverLeaderboard) {
-                        gameOverLeaderboard.style.display = 'block';
-                    }
-                    fetchLeaderboard();
+                    gameOverLeaderboard.style.display = 'block';
+                    
+                    const newData = await (await fetch('/api/highscores')).json();
+                    currentLeaderboard = newData;
+                    renderLeaderboard(newData, gameOverLeaderboardList);
                 } else {
                     alert('Fehler beim Speichern.');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Konnte Score nicht senden (Offline?).');
+                newHighscoreForm.style.display = 'none';
+                gameOverLeaderboard.style.display = 'block';
+                renderLeaderboard([{name: name, score: score}, ...currentLeaderboard], gameOverLeaderboardList);
             }
         }
 
-        function renderLeaderboard(data) {
-            const targets = [startLeaderboard, gameOverLeaderboard].filter(Boolean);
-
+        function renderLeaderboard(data, target) {
             if (!data || data.length === 0) {
-                targets.forEach((target) => {
-                    target.innerHTML = '<div style="text-align:center; padding:10px; color:#9ca3af">Noch keine Scores</div>';
-                });
+                target.innerHTML = '<div style="text-align:center; padding:10px; color:#64748b">Keine Daten</div>';
                 return;
             }
-            
             let html = '';
             data.forEach((entry, index) => {
                 html += `
                     <div class="leaderboard-item">
-                        <span class="leaderboard-rank">#${index + 1}</span>
-                        <span class="leaderboard-name">${entry.name || entry.member}</span>
-                        <span class="leaderboard-score">${entry.score}</span>
+                        <span class="rank">#${index + 1}</span>
+                        <span class="name">${entry.name || entry.member}</span>
+                        <span class="score">${entry.score}</span>
                     </div>
                 `;
             });
-            targets.forEach((target) => {
-                target.innerHTML = html;
-            });
+            target.innerHTML = html;
         }
 
         function checkHighscore(finalScore) {
-            // Check ob Score in Top 10 ist
-            // (Simpel: Wenn Liste < 10 oder Score > letzter Platz)
-            
-            // Safety: Falls noch keine Daten
             const lowestScore = currentLeaderboard.length < 10 ? -1 : currentLeaderboard[currentLeaderboard.length - 1].score;
             
+            gameOverLeaderboard.style.display = 'none';
+
             if (finalScore > lowestScore && finalScore > 0) {
                 newHighscoreForm.style.display = 'block';
-                newHighscoreForm.innerHTML = `
-                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 5px;">🏆 Neuer Highscore!</p>
-                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="Dein Name" maxlength="10">
-                    <button class="submit-btn" onclick="submitScore()">Senden</button>
-                `;
-                // Re-bind input variable after reset innerHTML
                 setTimeout(() => document.getElementById('playerNameInput').focus(), 100);
             } else {
                 newHighscoreForm.style.display = 'none';
-            }
-            if (gameOverLeaderboard) {
-                gameOverLeaderboard.style.display = 'none';
+                gameOverLeaderboard.style.display = 'block';
+                renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
             }
         }
 
-        // --- Klassen & Objekte ---
-
-        // Der Spieler (Abschleppwagen)
-        const player = {
-            x: 0,
-            y: 0,
-            width: 44,
-            height: 75,
-            speed: 8,
-            color: '#f59e0b', 
-            type: 'towtruck'
-        };
-
-        // Hindernisse & Ziele
+        /* --- GAME ENGINE --- */
+        // Aktualisierte Farbe #ffcd00 im Player-Objekt
+        const player = { x: 0, y: 0, width: 44, height: 75, speed: 8, color: '#ffcd00', type: 'towtruck' };
         let cars = [];
         let particles = []; 
         let floatingTexts = []; 
 
         class FloatingText {
             constructor(x, y, text, color) {
-                this.x = x;
-                this.y = y;
-                this.text = text;
-                this.color = color;
-                this.life = 1.0;
-                this.vy = -1.5; 
+                this.x = x; this.y = y; this.text = text; this.color = color;
+                this.life = 1.0; this.vy = -1.5; 
             }
-            update() {
-                this.y += this.vy;
-                this.life -= 0.02;
-            }
+            update() { this.y += this.vy; this.life -= 0.02; }
             draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = this.color;
-                ctx.font = "bold 24px Arial";
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = 4;
-                ctx.fillText(this.text, this.x, this.y);
-                ctx.restore();
+                ctx.save(); ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color; ctx.font = "bold 24px Arial";
+                ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
+                ctx.fillText(this.text, this.x, this.y); ctx.restore();
             }
         }
 
         class Car {
             constructor(isBroken) {
-                this.width = 40;
-                this.height = 65;
-                this.x = Math.random() * (canvas.width - 50);
-                this.y = -100;
+                this.width = 40; this.height = 65;
+                this.x = Math.random() * (canvas.width - 50); this.y = -100;
                 this.isBroken = isBroken;
                 this.speed = isBroken ? 0.5 : (Math.random() * 2 + 3); 
-                
-                // Farben (etwas knalliger für Game Look)
                 const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#ef4444', '#f97316'];
-                this.color = isBroken ? '#6b7280' : colors[Math.floor(Math.random() * colors.length)];
-                
-                this.repaired = false;
-                this.blinkerState = false;
-                this.blinkerTimer = 0;
+                this.color = isBroken ? '#64748b' : colors[Math.floor(Math.random() * colors.length)]; 
+                this.repaired = false; this.blinkerState = false; this.blinkerTimer = 0;
             }
-
             update() {
                 if (gameState === 'PLAYING') {
                     let moveSpeed = this.isBroken ? gameSpeed : (gameSpeed + this.speed * 0.5);
                     this.y += moveSpeed;
                 }
-
                 if (this.isBroken && !this.repaired) {
                     this.blinkerTimer++;
-                    if (this.blinkerTimer > 8) { // Noch schnelleres Blinken
-                        this.blinkerState = !this.blinkerState;
-                        this.blinkerTimer = 0;
-                    }
-                    if (Math.random() > 0.6) {
-                        particles.push(new Smoke(this.x + this.width/2, this.y + 10)); 
-                    }
+                    if (this.blinkerTimer > 8) { this.blinkerState = !this.blinkerState; this.blinkerTimer = 0; }
+                    if (Math.random() > 0.6) particles.push(new Smoke(this.x + this.width/2, this.y + 10)); 
                 }
             }
         }
 
         class Smoke {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 6 + 3;
-                this.alpha = 0.7;
-                this.vy = -1 - Math.random() * 1.5; 
-                this.vx = (Math.random() - 0.5) * 3;
+                this.x = x; this.y = y; this.size = Math.random() * 6 + 3;
+                this.alpha = 0.6; this.vy = -1 - Math.random() * 1.5; this.vx = (Math.random() - 0.5) * 3;
             }
-            update() {
-                this.y += this.vy;
-                this.x += this.vx;
-                this.alpha -= 0.02;
-                this.size += 0.15;
-            }
+            update() { this.y += this.vy; this.x += this.vx; this.alpha -= 0.03; this.size += 0.15; }
             draw() {
-                ctx.fillStyle = `rgba(150, 150, 150, ${this.alpha})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-                ctx.fill();
+                ctx.fillStyle = `rgba(148, 163, 184, ${this.alpha})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
             }
         }
 
-        // --- Zeichen Funktionen ---
+        /* --- RENDER --- */
 
         function drawVehicle(x, y, w, h, color, type, blinkerOn) {
             ctx.save();
-            
-            // Schatten
-            ctx.fillStyle = 'rgba(0,0,0,0.4)'; // Dunklerer Schatten für Kontrast
-            ctx.fillRect(x + 6, y + 6, w, h);
-
-            // Karosserie
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x + 8, y + 8, w, h);
+            ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 
             if (type === 'towtruck') {
-                // Kabine
-                ctx.fillStyle = '#d97706'; 
-                ctx.fillRect(x, y, w, h * 0.35);
-                
-                // Ladefläche
-                ctx.fillStyle = '#1f2937'; 
-                ctx.fillRect(x + 4, y + h * 0.4, w - 8, h * 0.55);
-                
-                // Warnleuchten (Balken)
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillRect(x + 5, y + 5, w - 10, 4);
+                // Kabine etwas dunkleres Gold (#e6b800)
+                ctx.fillStyle = '#e6b800'; ctx.fillRect(x, y, w, h * 0.35);
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x + 4, y + h * 0.4, w - 8, h * 0.55);
+                ctx.fillStyle = '#ffdb4d'; ctx.fillRect(x + 5, y + 5, w - 10, 4); // Hellgelbe Lichter
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(x + 5, y + 10, w - 10, 10);
 
-                // Windschutzscheibe
-                ctx.fillStyle = '#111827';
-                ctx.fillRect(x + 5, y + 10, w - 10, 10);
-
-                // --- EINSATZLICHT ---
                 if (gameState === 'REPAIRING') {
                     const time = Date.now() / 100;
                     const alpha = (Math.sin(time * 5) + 1) / 2 * 0.6 + 0.4;
-                    
-                    const centerX = x + w/2;
-                    const centerY = y + 7;
-                    const maxRadius = 50;
-                    
-                    const gradient = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, maxRadius);
-                    gradient.addColorStop(0, `rgba(255, 160, 0, ${alpha * 0.7})`);
-                    gradient.addColorStop(1, 'rgba(255, 160, 0, 0)');
-                    
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-
-                    ctx.shadowBlur = 30;
-                    ctx.shadowColor = '#f59e0b';
-                    ctx.fillStyle = `rgba(255, 230, 150, ${alpha + 0.3})`;
-                    
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.shadowBlur = 0;
+                    const cx = x + w/2; const cy = y + 7;
+                    const g = ctx.createRadialGradient(cx, cy, 5, cx, cy, 50);
+                    // Glow in neuem Gelb
+                    g.addColorStop(0, `rgba(255, 205, 0, ${alpha})`);
+                    g.addColorStop(1, 'transparent');
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 50, 0, Math.PI*2); ctx.fill();
+                    ctx.shadowBlur=20; ctx.shadowColor='#ffcd00'; ctx.fillStyle='#ffe680'; 
+                    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
                 }
-
             } else {
-                // Normales Auto
-                ctx.fillStyle = '#111827';
-                ctx.fillRect(x + 4, y + 12, w - 8, 10);
-                
-                ctx.fillRect(x + 4, y + h - 18, w - 8, 8);
-                
-                ctx.fillStyle = color; 
-                ctx.globalAlpha = 0.9;
-                ctx.fillRect(x + 6, y + 20, w - 12, h - 35);
-                ctx.globalAlpha = 1.0;
-
-                ctx.fillStyle = '#fef3c7';
-                ctx.fillRect(x + 2, y + h - 5, 8, 4);
-                ctx.fillRect(x + w - 10, y + h - 5, 8, 4);
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(x+4, y+12, w-8, 10);
+                ctx.fillRect(x+4, y+h-18, w-8, 8);
+                ctx.fillStyle = color; ctx.globalAlpha=0.9; ctx.fillRect(x+6, y+20, w-12, h-35); ctx.globalAlpha=1.0;
+                ctx.fillStyle = '#fef3c7'; ctx.fillRect(x+2, y+h-5, 8, 4); ctx.fillRect(x+w-10, y+h-5, 8, 4);
             }
 
-            // --- WARNBLINKER ---
             if (blinkerOn) {
-                ctx.fillStyle = '#ff9100'; 
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = '#ff5500'; 
-                
-                ctx.fillRect(x - 4, y, 8, 8);
-                ctx.fillRect(x + w - 4, y, 8, 8);
-                ctx.fillRect(x - 4, y + h - 8, 8, 8);
-                ctx.fillRect(x + w - 4, y + h - 8, 8, 8);
-
-                ctx.shadowBlur = 0; 
+                ctx.fillStyle = '#f97316'; ctx.shadowBlur = 15; ctx.shadowColor = '#ea580c';
+                ctx.fillRect(x-4, y, 8, 8); ctx.fillRect(x+w-4, y, 8, 8);
+                ctx.fillRect(x-4, y+h-8, 8, 8); ctx.fillRect(x+w-4, y+h-8, 8, 8);
+                ctx.shadowBlur = 0;
             }
-
             ctx.restore();
         }
 
-        // --- Game Logic ---
+        /* --- CONTROL & LOOP --- */
 
         function spawnCar() {
             if (gameState !== 'PLAYING') return;
-
-            const isBroken = Math.random() < 0.35;
-            cars.push(new Car(isBroken));
-
-            const minTime = 700;
-            const maxTime = 1600;
-            setTimeout(spawnCar, Math.random() * (maxTime - minTime) + minTime);
+            cars.push(new Car(Math.random() < 0.35));
+            setTimeout(spawnCar, Math.random() * 900 + 700);
         }
 
         function handleInput(type, code) {
             if (type === 'keydown') {
                 if (gameState === 'GAMEOVER' && code === 'Space') {
-                    // Check if input is focused, then don't restart
                     if (document.activeElement.tagName === 'INPUT') return;
                     resetGame();
                 }
                 if (gameState === 'START') startGame();
-                
                 if (code === 'ArrowLeft' || code === 'KeyA') player.moveLeft = true;
                 if (code === 'ArrowRight' || code === 'KeyD') player.moveRight = true;
             }
@@ -683,19 +567,12 @@
                 if (code === 'ArrowRight' || code === 'KeyD') player.moveRight = false;
             }
         }
-
         window.addEventListener('keydown', e => handleInput('keydown', e.code));
         window.addEventListener('keyup', e => handleInput('keyup', e.code));
-        
+
         let touchX = null;
         container.addEventListener('touchstart', e => {
-            // Prevent touch start on input form elements to allow typing
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
-
-            if(gameState === 'START' || gameState === 'GAMEOVER') {
-                if(gameState === 'GAMEOVER') resetGame();
-                else startGame();
-            }
             touchX = e.touches[0].clientX;
             if(e.cancelable) e.preventDefault();
         });
@@ -703,204 +580,99 @@
             if(touchX !== null && gameState === 'PLAYING') {
                 const diff = e.touches[0].clientX - touchX;
                 player.x += diff * 1.5;
-                if(player.x < 0) player.x = 0;
-                if(player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+                if(player.x < 0) player.x = 0; if(player.x > canvas.width - player.width) player.x = canvas.width - player.width;
             }
             touchX = e.touches[0].clientX;
             if(e.cancelable) e.preventDefault();
         });
 
         function startGame() {
-            gameState = 'PLAYING';
-            startScreen.style.display = 'none';
-            player.x = canvas.width/2 - player.width/2;
-            player.y = canvas.height - 130;
-            cars = [];
-            particles = [];
-            floatingTexts = [];
-            score = 0;
-            frameCount = 0;
-            scoreBoard.textContent = `SCORE: 0`;
-            scoreBoard.style.color = '#fff';
-            spawnCar();
-            animate();
+            gameState = 'PLAYING'; startScreen.style.display = 'none';
+            player.x = canvas.width/2 - player.width/2; player.y = canvas.height - 130;
+            cars = []; particles = []; floatingTexts = []; score = 0;
+            scoreBoard.textContent = 0; scoreBoard.style.color = '#fff';
+            spawnCar(); animate();
         }
 
         function resetGame() {
             gameOverScreen.style.display = 'none';
-            // Reload Leaderboard
             fetchLeaderboard();
-            startScreen.style.display = 'block';
+            startScreen.style.display = 'flex'; 
             gameState = 'START';
         }
 
         function startRepair(targetCar) {
-            gameState = 'REPAIRING';
-            currentTarget = targetCar;
-            repairTimer = 0;
-            
-            repairBar.style.display = 'block';
-            repairBar.style.left = (player.x - 8) + 'px';
-            repairBar.style.top = (player.y - 20) + 'px';
+            gameState = 'REPAIRING'; currentTarget = targetCar; repairTimer = 0;
+            repairBar.style.display = 'block'; repairBar.style.left = (player.x - 8) + 'px'; repairBar.style.top = (player.y - 20) + 'px';
         }
 
         function finishRepair() {
-            gameState = 'PLAYING';
-            score += 10; // Mehr Punkte fürs Gefühl
-            
-            // Score Pop-up
+            gameState = 'PLAYING'; score += 10;
             floatingTexts.push(new FloatingText(player.x, player.y - 40, "+10", "#10b981"));
-
             repairBar.style.display = 'none';
-            
-            if(currentTarget) {
-                currentTarget.repaired = true;
-                currentTarget.isBroken = false; 
-                currentTarget.color = '#10b981'; 
-                currentTarget.speed = 6; 
-            }
-            currentTarget = null;
-            scoreBoard.textContent = `SCORE: ${score}`;
-            
-            spawnCar();
+            if(currentTarget) { currentTarget.repaired = true; currentTarget.isBroken = false; currentTarget.color = '#10b981'; currentTarget.speed = 6; }
+            currentTarget = null; scoreBoard.textContent = score; spawnCar();
         }
 
         function crash(reason) {
-            gameState = 'GAMEOVER';
-            finalScoreDisplay.textContent = score;
-            
-            // Titel anpassen je nach Grund (Unfall oder Quote)
+            gameState = 'GAMEOVER'; finalScoreDisplay.textContent = score;
             const titleElement = document.getElementById('gameOverTitle');
-            if (titleElement) {
-                titleElement.textContent = reason || "Unfall!";
-            }
-            
+            if (titleElement) titleElement.textContent = reason || "Unfall!";
             checkHighscore(score);
-
-            gameOverScreen.style.display = 'block';
-            repairBar.style.display = 'none';
+            gameOverScreen.style.display = 'flex'; repairBar.style.display = 'none';
         }
 
         function update() {
-            frameCount++;
-            
-            particles.forEach((p, i) => {
-                p.update();
-                if(p.alpha <= 0) particles.splice(i, 1);
-            });
-            floatingTexts.forEach((ft, i) => {
-                ft.update();
-                if(ft.life <= 0) floatingTexts.splice(i, 1);
-            });
+            particles.forEach((p, i) => { p.update(); if(p.alpha <= 0) particles.splice(i, 1); });
+            floatingTexts.forEach((ft, i) => { ft.update(); if(ft.life <= 0) floatingTexts.splice(i, 1); });
 
             if (gameState === 'PLAYING') {
-                roadOffset += gameSpeed;
-                if (roadOffset > 40) roadOffset = 0;
-
+                roadOffset += gameSpeed; if (roadOffset > 40) roadOffset = 0;
                 if (player.moveLeft && player.x > 0) player.x -= player.speed;
                 if (player.moveRight && player.x < canvas.width - player.width) player.x += player.speed;
 
                 cars.forEach((car, index) => {
                     car.update();
-
                     const padding = 6;
-                    if (
-                        player.x + padding < car.x + car.width - padding &&
-                        player.x + player.width - padding > car.x + padding &&
-                        player.y + padding < car.y + car.height - padding &&
-                        player.y + player.height - padding > car.y + padding
-                    ) {
-                        if (car.isBroken && !car.repaired) {
-                            startRepair(car);
-                        } else if (!car.isBroken && !car.repaired) {
-                            crash("Unfall!");
-                        }
+                    if (player.x + padding < car.x + car.width - padding && player.x + player.width - padding > car.x + padding && player.y + padding < car.y + car.height - padding && player.y + player.height - padding > car.y + padding) {
+                        if (car.isBroken && !car.repaired) startRepair(car); else if (!car.isBroken && !car.repaired) crash("Unfall!");
                     }
-
                     if (car.y > canvas.height + 50) {
                         if (car.isBroken && !car.repaired) {
-                            score -= 5; // Härtere Strafe
-                            scoreBoard.textContent = `SCORE: ${score}`;
-                            
+                            score -= 5; scoreBoard.textContent = score;
                             floatingTexts.push(new FloatingText(car.x + car.width/2 - 10, canvas.height - 40, "-5", "#ef4444"));
-                            
                             scoreBoard.style.color = '#ef4444';
-                            
-                            // CHECK: Game Over bei negativem Score
-                            if (score < 0) {
-                                crash("Pannenquote verfehlt!");
-                            } else {
-                                setTimeout(() => {
-                                    if(gameState === 'PLAYING') scoreBoard.style.color = '#fff';
-                                }, 300);
-                            }
+                            if (score < 0) crash("Pannenquote!"); else setTimeout(() => { if(gameState === 'PLAYING') scoreBoard.style.color = '#fff'; }, 300);
                         }
-                        
                         cars.splice(index, 1);
                     }
                 });
-
             } else if (gameState === 'REPAIRING') {
-                repairTimer++;
-                let pct = (repairTimer / repairDuration) * 100;
-                repairFill.style.width = pct + '%';
-                
+                repairTimer++; let pct = (repairTimer / repairDuration) * 100; repairFill.style.width = pct + '%';
                 repairBar.style.left = (player.x - 8) + 'px';
-
-                if (repairTimer >= repairDuration) {
-                    finishRepair();
-                }
+                if (repairTimer >= repairDuration) finishRepair();
             }
         }
 
         function draw() {
-            // Asphalt (Dunkler)
-            ctx.fillStyle = '#262626';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = 4; ctx.setLineDash([30, 40]); ctx.lineDashOffset = -roadOffset; 
+            ctx.beginPath(); ctx.moveTo(canvas.width / 2, -50); ctx.lineTo(canvas.width / 2, canvas.height + 50); ctx.stroke();
+            ctx.setLineDash([]); ctx.lineWidth = 8; ctx.strokeStyle = '#475569';
+            ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(10, canvas.height); ctx.moveTo(canvas.width - 10, 0); ctx.lineTo(canvas.width - 10, canvas.height); ctx.stroke();
 
-            // Mittelstreifen
-            ctx.strokeStyle = '#525252';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([30, 40]);
-            ctx.lineDashOffset = -roadOffset; 
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, -50);
-            ctx.lineTo(canvas.width / 2, canvas.height + 50);
-            ctx.stroke();
-
-            // Randstreifen
-            ctx.setLineDash([]);
-            ctx.lineWidth = 8;
-            ctx.strokeStyle = '#d4d4d4';
-            ctx.beginPath();
-            ctx.moveTo(10, 0); ctx.lineTo(10, canvas.height);
-            ctx.moveTo(canvas.width - 10, 0); ctx.lineTo(canvas.width - 10, canvas.height);
-            ctx.stroke();
-
-            // Objekte
-            cars.forEach(car => {
-                drawVehicle(car.x, car.y, car.width, car.height, car.color, 'car', car.blinkerState);
-            });
-
-            player.y = canvas.height - 130; // Fix Position
+            cars.forEach(car => drawVehicle(car.x, car.y, car.width, car.height, car.color, 'car', car.blinkerState));
+            player.y = canvas.height - 130;
             drawVehicle(player.x, player.y, player.width, player.height, player.color, 'towtruck', false);
-
-            particles.forEach(p => p.draw());
-            floatingTexts.forEach(ft => ft.draw());
+            particles.forEach(p => p.draw()); floatingTexts.forEach(ft => ft.draw());
         }
 
         function animate() {
-            if (gameState !== 'GAMEOVER') {
-                update();
-                draw();
-                requestAnimationFrame(animate);
-            }
+            if (gameState !== 'GAMEOVER') { update(); draw(); requestAnimationFrame(animate); }
         }
 
-        resizeCanvas();
-        player.y = canvas.height - 130;
-        player.x = canvas.width/2 - 22;
-        draw();
+        // Init
+        resizeCanvas(); player.y = canvas.height - 130; player.x = canvas.width/2 - 22; draw();
 
     </script>
 </body>
