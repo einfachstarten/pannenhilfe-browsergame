@@ -24,6 +24,8 @@
             --danger-color: #ef4444;
             --success-color: #10b981;
             --tech-blue: #3b82f6; /* Für den Connected Car Modus */
+            --shield-color: #06b6d4; /* Cyan für das Schild */
+            --magnet-color: #d946ef; /* Magenta für den Magnet */
             
             /* Charakter Farben */
             --skin-color: #ffdbac; 
@@ -494,6 +496,20 @@
             display: none;
         }
 
+        #powerupDisplay {
+            position: absolute;
+            top: 60px; left: 24px; 
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 18px;
+            text-shadow: 1px 1px 0 #000;
+            pointer-events: none;
+            z-index: 5;
+            display: none; /* Hidden by default */
+            align-items: center;
+            gap: 8px;
+        }
+
         #repairBarContainer {
             position: absolute; width: 60px; height: 8px;
             background: #0f172a; border: 1px solid #94a3b8;
@@ -563,6 +579,12 @@
             
             <div id="scoreBoard">0</div>
             <div id="comboText">COMBO x2</div>
+            
+            <!-- Powerup UI -->
+            <div id="powerupDisplay">
+                <span id="powerupIcon" style="font-size: 1.5rem;">🛡️</span>
+                <span id="powerupTimer">30s</span>
+            </div>
             
             <div id="repairBarContainer">
                 <div id="repairBarFill"></div>
@@ -759,6 +781,9 @@
         const gameOverLeaderboard = document.getElementById('gameOverLeaderboard');
         const gameOverLeaderboardList = document.getElementById('gameOverLeaderboardList');
         const submittingScoreText = document.getElementById('submittingScoreText');
+        const powerupDisplay = document.getElementById('powerupDisplay');
+        const powerupIcon = document.getElementById('powerupIcon');
+        const powerupTimer = document.getElementById('powerupTimer');
         
         // Diagnostic Elements
         const diagContainer = document.getElementById('diagContainer');
@@ -786,6 +811,12 @@
         // Diagnostic Logic
         let currentDiagQuestion = null;
         let diagSelectedIndex = 0;
+        
+        // Powerup Logic
+        let shieldActive = false;
+        let magnetActive = false;
+        let powerupEndTime = 0;
+        let nextPowerupType = 'shield'; // toggles between 'shield' and 'magnet'
 
         // Fragen Katalog (Connected Car Challenge)
         const diagnosticQuestions = [
@@ -1054,10 +1085,11 @@
             if (isCorrect) {
                 score += 50;
                 solvedAMDs++;
-                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM RECOVERED! +50", "#10b981")); 
+                floatingTexts.push(new FloatingSign(player.x, player.y - 60, "SYSTEM OK! +50", "#10b981"));
+                activatePowerup(); 
             } else {
                 score -= 50;
-                floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM FAILURE! -50", "#ef4444")); 
+                floatingTexts.push(new FloatingSign(player.x, player.y - 60, "SYSTEM FAILURE! -50", "#ef4444")); 
             }
             
             scoreBoard.textContent = score;
@@ -1066,6 +1098,29 @@
             gameState = 'PLAYING';
             spawnCar();
         }
+        
+        // --- POWERUP LOGIC ---
+        function activatePowerup() {
+            powerupEndTime = Date.now() + 30000; // 30 seconds
+            
+            if (nextPowerupType === 'shield') {
+                shieldActive = true;
+                magnetActive = false;
+                powerupIcon.innerText = "🛡️";
+                powerupDisplay.style.color = "var(--shield-color)";
+                nextPowerupType = 'magnet'; // Toggle next
+                floatingTexts.push(new FloatingSign(player.x, player.y - 90, "Unfallschild!!", "var(--shield-color)"));
+            } else {
+                magnetActive = true;
+                shieldActive = false;
+                powerupIcon.innerText = "🧲";
+                powerupDisplay.style.color = "var(--magnet-color)";
+                nextPowerupType = 'shield'; // Toggle next
+                floatingTexts.push(new FloatingSign(player.x, player.y - 90, "Connectivity Magnet!!", "var(--magnet-color)"));
+            }
+            
+            powerupDisplay.style.display = 'flex';
+        }
 
         /* --- GAME ENGINE --- */
         const player = { x: 0, y: 0, width: 44, height: 75, speed: 8, color: '#ffcd00', type: 'towtruck' };
@@ -1073,18 +1128,86 @@
         let particles = []; 
         let floatingTexts = []; 
 
-        class FloatingText {
+        // Renamed class to FloatingSign for better clarity
+        class FloatingSign {
             constructor(x, y, text, color) {
-                this.x = x; this.y = y; this.text = text; this.color = color;
-                this.life = 1.0; this.vy = -1.5; 
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 1.0;
+                this.vy = -2; // Faster up
+                this.rotation = (Math.random() - 0.5) * 0.3; // Random tilt
+                this.scale = 0;
             }
-            update() { this.y += this.vy; this.life -= 0.015; }
+
+            update() {
+                this.y += this.vy;
+                this.life -= 0.015;
+                // Pop in animation
+                if (this.scale < 1.2 && this.life > 0.8) {
+                     this.scale += 0.2;
+                } else if (this.scale > 1.0) {
+                     this.scale -= 0.05;
+                }
+            }
+
             draw() {
-                ctx.save(); ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = this.color; ctx.font = "bold 24px Arial";
-                ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4;
-                ctx.textAlign = "center";
-                ctx.fillText(this.text, this.x + 22, this.y); ctx.restore();
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.scale(this.scale, this.scale);
+                ctx.globalAlpha = Math.max(0, this.life);
+
+                // Determine color value from CSS variable or hex string
+                let actualColor = this.color;
+                if (this.color.startsWith('var')) {
+                    if (this.color.includes('shield')) actualColor = '#06b6d4';
+                    else if (this.color.includes('magnet')) actualColor = '#d946ef';
+                    else if (this.color.includes('success')) actualColor = '#10b981';
+                    else if (this.color.includes('danger')) actualColor = '#ef4444';
+                    else actualColor = '#ffffff'; 
+                }
+
+                ctx.font = "bold 16px 'Courier New', monospace"; 
+                const textWidth = ctx.measureText(this.text).width;
+                const padding = 10;
+                const boxWidth = textWidth + padding * 2;
+                const boxHeight = 34;
+
+                // Shadow (Glow)
+                ctx.shadowColor = actualColor;
+                ctx.shadowBlur = 15;
+
+                // Background (Dark)
+                ctx.fillStyle = '#1e293b'; 
+                ctx.strokeStyle = actualColor;
+                ctx.lineWidth = 2;
+                
+                ctx.beginPath();
+                // Draw rounded rect manually for compatibility
+                const x = -boxWidth/2, y = -boxHeight/2, w = boxWidth, h = boxHeight, r = 8;
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Text (White for readability)
+                ctx.shadowBlur = 0; 
+                ctx.fillStyle = '#ffffff'; 
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.text, 0, 0);
+
+                ctx.restore();
             }
         }
 
@@ -1147,6 +1270,49 @@
                     ctx.shadowBlur=20; ctx.shadowColor='#ffcd00'; ctx.fillStyle='#ffe680'; 
                     ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
                 }
+                
+                // SHIELD EFFECT
+                if (shieldActive) {
+                    const time = Date.now() / 200;
+                    const pulse = (Math.sin(time) + 1) / 2 * 0.4 + 0.3; // 0.3 to 0.7
+                    
+                    ctx.strokeStyle = 'var(--shield-color)'; // Cyan
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = 'var(--shield-color)';
+                    
+                    ctx.globalAlpha = pulse;
+                    ctx.beginPath();
+                    ctx.arc(x + w/2, y + h/2, 60, 0, Math.PI*2);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                    ctx.shadowBlur = 0;
+                }
+                
+                // MAGNET EFFECT
+                if (magnetActive) {
+                    const time = Date.now() / 150;
+                    // Draw concentric arcs radiating outwards
+                    ctx.strokeStyle = 'var(--magnet-color)'; 
+                    ctx.lineWidth = 2;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'var(--magnet-color)';
+                    
+                    for(let i=0; i<3; i++) {
+                         const offset = (time + i*10) % 40; // loops 0 to 40
+                         const alpha = 1 - (offset / 40); // fades out
+                         const radius = 40 + offset;
+                         
+                         ctx.globalAlpha = alpha;
+                         ctx.beginPath();
+                         // Draw arc above truck
+                         ctx.arc(x + w/2, y + h/2, radius, Math.PI, 2*Math.PI); // Top half arc
+                         ctx.stroke();
+                    }
+                    ctx.globalAlpha = 1.0;
+                    ctx.shadowBlur = 0;
+                }
+                
             } else {
                 ctx.fillStyle = '#0f172a'; ctx.fillRect(x+4, y+12, w-8, 10);
                 ctx.fillRect(x+4, y+h-18, w-8, 8);
@@ -1247,6 +1413,11 @@
             solvedAMDs = 0;
             gameSpeed = baseSpeed; 
             combo = 0; // Reset Combo
+            shieldActive = false; // Reset shield
+            magnetActive = false; // Reset magnet
+            shieldEndTime = 0;
+            powerupEndTime = 0;
+            document.getElementById('powerupDisplay').style.display = 'none';
             scoreBoard.textContent = 0; scoreBoard.style.color = '#fff';
             comboText.style.display = 'none';
             spawnCar(); animate();
@@ -1295,14 +1466,14 @@
             
             if (repairsCount % 5 === 0) {
                  gameSpeed = Math.min(12, baseSpeed + (repairsCount / 5) * 0.5);
-                 floatingTexts.push(new FloatingText(player.x, player.y - 80, "LEVEL UP! FASTER!", "#f59e0b"));
+                 floatingTexts.push(new FloatingSign(player.x, player.y - 80, "LEVEL UP! FASTER!", "#f59e0b"));
             }
 
             if (repairsCount > 0 && repairsCount % 20 === 0) {
                 triggerDiagnosticMode();
             } else {
                 gameState = 'PLAYING';
-                floatingTexts.push(new FloatingText(player.x, player.y - 40, comboMsg, "#10b981"));
+                floatingTexts.push(new FloatingSign(player.x, player.y - 40, comboMsg, "#10b981"));
                 spawnCar();
             }
         }
@@ -1328,6 +1499,19 @@
             particles.forEach((p, i) => { p.update(); if(p.alpha <= 0) particles.splice(i, 1); });
             floatingTexts.forEach((ft, i) => { ft.update(); if(ft.life <= 0) floatingTexts.splice(i, 1); });
 
+            // POWERUP TIMER UPDATE
+            if (shieldActive || magnetActive) {
+                const remaining = Math.ceil((powerupEndTime - Date.now()) / 1000);
+                if (remaining <= 0) {
+                    shieldActive = false;
+                    magnetActive = false;
+                    document.getElementById('powerupDisplay').style.display = 'none';
+                    floatingTexts.push(new FloatingSign(player.x, player.y - 60, "POWERUP ABGELAUFEN", "#ef4444"));
+                } else {
+                    document.getElementById('powerupTimer').innerText = remaining + "s";
+                }
+            }
+
             if (gameState === 'PLAYING') {
                 roadOffset += gameSpeed; if (roadOffset > 40) roadOffset = 0;
                 if (player.moveLeft && player.x > 0) player.x -= player.speed;
@@ -1335,9 +1519,30 @@
 
                 cars.forEach((car, index) => {
                     car.update();
-                    const padding = 6;
+                    let padding = 6;
+                    
+                    // MAGNET LOGIC: Increase detection range for BROKEN cars
+                    if (magnetActive && car.isBroken && !car.repaired) {
+                        // Increase padding significantly to "pull" the car
+                        // Standard width is ~40, lane is wide. Let's make it catch from ~50px away
+                        padding = -60; // Negative padding makes hitbox huge
+                    }
+
                     if (player.x + padding < car.x + car.width - padding && player.x + player.width - padding > car.x + padding && player.y + padding < car.y + car.height - padding && player.y + player.height - padding > car.y + padding) {
-                        if (car.isBroken && !car.repaired) startRepair(car); else if (!car.isBroken && !car.repaired) crash("Unfall!");
+                        if (car.isBroken && !car.repaired) {
+                             startRepair(car); 
+                        } else if (!car.isBroken && !car.repaired) {
+                             // CRASH LOGIC WITH SHIELD CHECK
+                             if (!shieldActive) {
+                                 crash("Unfall!");
+                             } else {
+                                 // Shield Active
+                                 if (!car.hitByShield) { 
+                                     floatingTexts.push(new FloatingSign(car.x + car.width/2, car.y, "ABGEWEHRT!", "#06b6d4"));
+                                     car.hitByShield = true;
+                                 }
+                             }
+                        }
                     }
                     if (car.y > canvas.height + 50) {
                         if (car.isBroken && !car.repaired) {
@@ -1345,11 +1550,11 @@
                             score -= 5; 
                             missedRepairs++;
                             scoreBoard.textContent = score;
-                            floatingTexts.push(new FloatingText(car.x + car.width/2 - 10, canvas.height - 40, "-5", "#ef4444"));
+                            floatingTexts.push(new FloatingSign(car.x + car.width/2 - 10, canvas.height - 40, "-5", "#ef4444"));
                             
                             // COMBO BREAKER
                             if (combo > 0) {
-                                floatingTexts.push(new FloatingText(player.x, player.y - 80, "C-C-C-Combo breaker!!!!", "#ef4444"));
+                                floatingTexts.push(new FloatingSign(player.x, player.y - 80, "C-C-C-Combo breaker!!!!", "#ef4444"));
                                 combo = 0;
                                 comboText.style.display = 'none';
                             }
