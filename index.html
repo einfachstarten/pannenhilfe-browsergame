@@ -96,9 +96,10 @@
             padding: 32px 48px;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
+            pointer-events: auto; /* Wichtig für Input Felder */
             z-index: 10;
             border: 1px solid #4b5563;
+            min-width: 300px;
         }
 
         .overlay h2 {
@@ -191,6 +192,54 @@
             transition: width 0.1s linear;
         }
 
+        /* Leaderboard Styles */
+        .leaderboard-list {
+            text-align: left;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+        .leaderboard-item:last-child { border-bottom: none; }
+        .leaderboard-rank { width: 30px; color: var(--warn-color); font-weight: bold; }
+        .leaderboard-name { flex-grow: 1; }
+        .leaderboard-score { font-weight: bold; color: var(--success-color); }
+
+        .highscore-input-container {
+            margin-top: 15px;
+            display: none; /* Hidden by default */
+        }
+        .highscore-input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #4b5563;
+            background: #111827;
+            color: white;
+            width: 70%;
+            margin-right: 5px;
+        }
+        .submit-btn {
+            padding: 8px 16px;
+            background: var(--success-color);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .submit-btn:hover { opacity: 0.9; }
+
         @media (max-width: 600px) {
             .game-container { height: 450px; }
             .card-header { flex-direction: column; gap: 10px; text-align: center; }
@@ -204,7 +253,7 @@
     <div class="game-card">
         <div class="card-header">
             <h1>Pannenhilfe Simulator</h1>
-            <div class="status-badge">v1.0 • Ready to Play</div>
+            <div class="status-badge">v1.1 • Leaderboard Active</div>
         </div>
 
         <!-- Spiel Bereich -->
@@ -220,8 +269,10 @@
 
             <div id="startScreen" class="overlay">
                 <h2>Einsatzbereit?</h2>
+                <div class="leaderboard-list" id="startLeaderboard">
+                    <div style="text-align: center; color: #6b7280;">Lade Highscores...</div>
+                </div>
                 <p>Fahre zu den <span style="color:var(--warn-color); font-weight:bold;">Pannenautos (⚠️)</span>.</p>
-                <p style="font-size: 0.95rem; opacity: 0.8; margin-top: 5px;">Achtung: Verpasste Pannen geben Minuspunkte!</p>
                 <div style="margin-top: 25px;">
                     <span class="kbd">←</span> <span class="kbd">→</span> Lenken
                 </div>
@@ -232,7 +283,15 @@
 
             <div id="gameOverScreen" class="overlay" style="display: none;">
                 <h2 id="gameOverTitle" style="color: var(--accent-color);">Unfall!</h2>
-                <p>Gelöste Einsätze: <span id="finalScore" style="font-weight: bold; color: white;">0</span></p>
+                <p>Dein Score: <span id="finalScore" style="font-weight: bold; color: white;">0</span></p>
+                
+                <!-- Highscore Input Form -->
+                <div id="newHighscoreForm" class="highscore-input-container">
+                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 5px;">🏆 Neuer Highscore!</p>
+                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="Dein Name" maxlength="10">
+                    <button class="submit-btn" onclick="submitScore()">Senden</button>
+                </div>
+
                 <div style="margin-top: 20px;">
                     <span class="kbd">Leertaste</span> für Neustart
                 </div>
@@ -259,18 +318,28 @@
         const finalScoreDisplay = document.getElementById('finalScore');
         const repairBar = document.getElementById('repairBarContainer');
         const repairFill = document.getElementById('repairBarFill');
+        const startLeaderboard = document.getElementById('startLeaderboard');
+        const newHighscoreForm = document.getElementById('newHighscoreForm');
+        const playerNameInput = document.getElementById('playerNameInput');
 
         // Status Variablen
         let gameState = 'START'; // START, PLAYING, REPAIRING, GAMEOVER
         let score = 0;
         let roadOffset = 0;
-        let baseSpeed = 5; // Etwas schneller für mehr Action
+        let baseSpeed = 5; 
         let gameSpeed = baseSpeed;
         let frameCount = 0;
         
+        // Highscore Logic
+        let currentLeaderboard = [];
+        let isHighscoreSubmission = false;
+        
+        // Initial laden
+        fetchLeaderboard();
+
         // Reparatur Logic
         let repairTimer = 0;
-        const repairDuration = 50; // Etwas schneller reparieren für besseren Flow
+        const repairDuration = 50; 
         let currentTarget = null; 
 
         function resizeCanvas() {
@@ -279,6 +348,95 @@
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+
+        // --- API Integration (Simuliert falls Backend fehlt) ---
+        
+        async function fetchLeaderboard() {
+            try {
+                // Versuche vom Backend zu laden
+                const res = await fetch('/api/highscores');
+                if (res.ok) {
+                    currentLeaderboard = await res.json();
+                    renderLeaderboard(currentLeaderboard);
+                } else {
+                    throw new Error('API not reachable');
+                }
+            } catch (e) {
+                console.log('Leaderboard Offline Mode');
+                // Fallback für Demo/Offline
+                if(currentLeaderboard.length === 0) {
+                    renderLeaderboard([
+                        { name: "Team Lead", score: 100 },
+                        { name: "Bot 1", score: 50 },
+                        { name: "Bot 2", score: 20 }
+                    ]);
+                }
+            }
+        }
+
+        async function submitScore() {
+            const name = playerNameInput.value.trim();
+            if (!name) return;
+
+            try {
+                const res = await fetch('/api/submit-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name.substring(0, 10), score: score })
+                });
+                
+                if (res.ok) {
+                    // Refresh
+                    newHighscoreForm.innerHTML = '<p style="color:var(--success-color)">Gespeichert!</p>';
+                    fetchLeaderboard();
+                } else {
+                    alert('Fehler beim Speichern.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Konnte Score nicht senden (Offline?).');
+            }
+        }
+
+        function renderLeaderboard(data) {
+            if (!data || data.length === 0) {
+                startLeaderboard.innerHTML = '<div style="text-align:center; padding:10px; color:#9ca3af">Noch keine Scores</div>';
+                return;
+            }
+            
+            let html = '';
+            data.forEach((entry, index) => {
+                html += `
+                    <div class="leaderboard-item">
+                        <span class="leaderboard-rank">#${index + 1}</span>
+                        <span class="leaderboard-name">${entry.name || entry.member}</span>
+                        <span class="leaderboard-score">${entry.score}</span>
+                    </div>
+                `;
+            });
+            startLeaderboard.innerHTML = html;
+        }
+
+        function checkHighscore(finalScore) {
+            // Check ob Score in Top 10 ist
+            // (Simpel: Wenn Liste < 10 oder Score > letzter Platz)
+            
+            // Safety: Falls noch keine Daten
+            const lowestScore = currentLeaderboard.length < 10 ? -1 : currentLeaderboard[currentLeaderboard.length - 1].score;
+            
+            if (finalScore > lowestScore && finalScore > 0) {
+                newHighscoreForm.style.display = 'block';
+                newHighscoreForm.innerHTML = `
+                    <p style="color: var(--success-color); font-weight: bold; margin-bottom: 5px;">🏆 Neuer Highscore!</p>
+                    <input type="text" id="playerNameInput" class="highscore-input" placeholder="Dein Name" maxlength="10">
+                    <button class="submit-btn" onclick="submitScore()">Senden</button>
+                `;
+                // Re-bind input variable after reset innerHTML
+                setTimeout(() => document.getElementById('playerNameInput').focus(), 100);
+            } else {
+                newHighscoreForm.style.display = 'none';
+            }
+        }
 
         // --- Klassen & Objekte ---
 
@@ -491,7 +649,11 @@
 
         function handleInput(type, code) {
             if (type === 'keydown') {
-                if (gameState === 'GAMEOVER' && code === 'Space') resetGame();
+                if (gameState === 'GAMEOVER' && code === 'Space') {
+                    // Check if input is focused, then don't restart
+                    if (document.activeElement.tagName === 'INPUT') return;
+                    resetGame();
+                }
                 if (gameState === 'START') startGame();
                 
                 if (code === 'ArrowLeft' || code === 'KeyA') player.moveLeft = true;
@@ -508,12 +670,15 @@
         
         let touchX = null;
         container.addEventListener('touchstart', e => {
+            // Prevent touch start on input form elements to allow typing
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+
             if(gameState === 'START' || gameState === 'GAMEOVER') {
                 if(gameState === 'GAMEOVER') resetGame();
                 else startGame();
             }
             touchX = e.touches[0].clientX;
-            e.preventDefault();
+            if(e.cancelable) e.preventDefault();
         });
         container.addEventListener('touchmove', e => {
             if(touchX !== null && gameState === 'PLAYING') {
@@ -523,7 +688,7 @@
                 if(player.x > canvas.width - player.width) player.x = canvas.width - player.width;
             }
             touchX = e.touches[0].clientX;
-            e.preventDefault();
+            if(e.cancelable) e.preventDefault();
         });
 
         function startGame() {
@@ -544,7 +709,10 @@
 
         function resetGame() {
             gameOverScreen.style.display = 'none';
-            startGame();
+            // Reload Leaderboard
+            fetchLeaderboard();
+            startScreen.style.display = 'block';
+            gameState = 'START';
         }
 
         function startRepair(targetCar) {
@@ -588,6 +756,8 @@
                 titleElement.textContent = reason || "Unfall!";
             }
             
+            checkHighscore(score);
+
             gameOverScreen.style.display = 'block';
             repairBar.style.display = 'none';
         }
