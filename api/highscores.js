@@ -10,8 +10,20 @@ function getRedisClient() {
 }
 
 export default async function handler(req, res) {
+  if (!process.env.REDIS_URL) {
+    res.status(500).json({ error: 'REDIS_URL is not configured' });
+    return;
+  }
+
   const redis = getRedisClient();
-  const entries = await redis.zrevrange('highscores', 0, 9, 'WITHSCORES');
+  let entries;
+  try {
+    entries = await redis.zrevrange('highscores', 0, 9, 'WITHSCORES');
+  } catch (error) {
+    console.error('Failed to load highscores', error);
+    res.status(500).json({ error: 'Failed to load highscores' });
+    return;
+  }
   const scores = [];
 
   for (let i = 0; i < entries.length; i += 2) {

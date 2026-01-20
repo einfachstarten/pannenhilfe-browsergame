@@ -19,6 +19,11 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (!process.env.REDIS_URL) {
+    res.status(500).json({ error: 'REDIS_URL is not configured' });
+    return;
+  }
+
   const { name, score } = req.body ?? {};
 
   if (!name) {
@@ -34,7 +39,13 @@ export default async function handler(req, res) {
   const cleanName = sanitizeName(String(name));
   const redis = getRedisClient();
 
-  await redis.zadd('highscores', score, cleanName);
+  try {
+    await redis.zadd('highscores', score, cleanName);
+  } catch (error) {
+    console.error('Failed to submit score', error);
+    res.status(500).json({ error: 'Failed to submit score' });
+    return;
+  }
 
   res.status(200).json({ success: true });
 }
