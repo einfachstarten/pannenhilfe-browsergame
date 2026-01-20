@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Straßenwacht: Connected</title>
+    <!-- PWA Integration -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.svg">
+
     <style>
         :root {
             --bg-color: #0f172a; /* Deep Space Blue */
@@ -24,7 +26,7 @@
             --tech-blue: #3b82f6; /* Für den Connected Car Modus */
             
             /* Charakter Farben */
-            --skin-color: #ffdbac; /* Etwas natürlicherer Hautton */
+            --skin-color: #ffdbac; 
             --hair-color: #262626; 
         }
 
@@ -138,6 +140,33 @@
             padding-bottom: 5px;
         }
 
+        /* STORY SCREEN STYLES */
+        .story-content {
+            max-width: 600px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .story-line {
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeIn 0.8s forwards;
+        }
+        /* Erweiterte Animationen für alle 8 Zeilen */
+        .story-line:nth-child(1) { animation-delay: 0.5s; }
+        .story-line:nth-child(2) { animation-delay: 1.5s; }
+        .story-line:nth-child(3) { animation-delay: 3.0s; }
+        .story-line:nth-child(4) { animation-delay: 4.5s; }
+        .story-line:nth-child(5) { animation-delay: 6.5s; }
+        .story-line:nth-child(6) { animation-delay: 8.0s; }
+        .story-line:nth-child(7) { animation-delay: 9.5s; }
+        .story-line:nth-child(8) { animation-delay: 11.5s; }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+
         /* CSS CHARACTER (Pannenfahrer SVG) */
         .driver-container {
             width: 200px;
@@ -163,12 +192,11 @@
             font-family: 'Courier New', monospace;
             text-transform: uppercase;
             position: absolute;
-            /* Positioniert relativ zum SVG Body */
             top: 155px; 
             right: 45px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0); /* Startet unsichtbar */
+            transform: scale(0);
             max-width: 80px;
             white-space: nowrap;
             overflow: hidden;
@@ -414,7 +442,7 @@
             text-shadow: 1px 1px 0 #000;
             pointer-events: none;
             z-index: 5;
-            display: none; /* hidden if combo < 2 */
+            display: none;
         }
 
         #repairBarContainer {
@@ -452,52 +480,53 @@
                 <h1 class="game-title" style="font-size: 2.5rem; margin-bottom: 20px;">Willkommen<br>im Team</h1>
                 <p style="margin-bottom: 30px; text-align: center;">Wie ist dein Name, Pannenfahry?</p>
                 
-                <!-- SVG Character (Freundlicher, ohne Skimaske) -->
+                <!-- SVG Character -->
                 <div class="driver-container">
                     <svg class="driver-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Body (ADAC Yellow) -->
                         <path d="M50 220 L50 160 Q50 120 100 120 Q150 120 150 160 L150 220 Z" fill="#ffcd00" />
-                        <!-- Collar (Dark) -->
                         <path d="M80 120 L80 140 Q100 150 120 140 L120 120" fill="#1e293b" />
-                        
-                        <!-- Neck -->
                         <rect x="85" y="100" width="30" height="30" fill="#ffdbac" />
-
-                        <!-- Head Shape -->
                         <rect x="65" y="40" width="70" height="90" rx="25" fill="#ffdbac" />
-                        
-                        <!-- Ears -->
                         <circle cx="60" cy="85" r="8" fill="#ffdbac" />
                         <circle cx="140" cy="85" r="8" fill="#ffdbac" />
-                        
-                        <!-- Hair (Dark, friendly cut) -->
-                        <!-- Top Hair -->
                         <path d="M55 60 Q60 20 100 20 Q140 20 145 60 L145 70 Q145 50 135 50 L65 50 Q55 50 55 70 Z" fill="#262626" />
-                        <!-- Sideburns (distinct from beard) -->
                         <path d="M55 60 L65 60 L65 90 L55 80 Z" fill="#262626" />
                         <path d="M145 60 L135 60 L135 90 L145 80 Z" fill="#262626" />
-
-                        <!-- No Beard (Clean Shaven) -->
-                        
-                        <!-- Eyes (Friendly) -->
                         <circle cx="82" cy="80" r="5" fill="#1e293b" />
                         <circle cx="118" cy="80" r="5" fill="#1e293b" />
-                        <!-- Eyebrows -->
                         <path d="M75 72 Q82 70 89 72" fill="none" stroke="#262626" stroke-width="3" stroke-linecap="round"/>
                         <path d="M111 72 Q118 70 125 72" fill="none" stroke="#262626" stroke-width="3" stroke-linecap="round"/>
-
-                        <!-- Nose -->
                         <path d="M95 85 L95 95 L105 95" fill="none" stroke="#dca685" stroke-width="2" stroke-linecap="round"/>
-                        
-                        <!-- Smile (Visible above beard) -->
                         <path d="M90 105 Q100 110 110 105" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    
                     <div id="driverBadge" class="name-tag"></div>
                 </div>
 
                 <input type="text" id="initialNameInput" class="highscore-input" placeholder="Name eingeben" maxlength="12" oninput="updateNameBadge()">
                 <button class="start-btn" onclick="saveNameAndStart()">Weiter</button>
+            </div>
+
+            <!-- STORY SCREEN (Briefing) -->
+            <div id="storyScreen" class="overlay" style="display: none;">
+                <h1 class="game-title" style="font-size: 2rem; margin-bottom: 30px; animation: none; text-shadow: none; color: var(--accent-color);">BRIEFING</h1>
+                
+                <div class="story-content">
+                    <div class="story-line">> Zugriff auf Personalakte... OK.</div>
+                    <div class="story-line" style="margin-bottom: 20px;">> Status: Einsatzbereit.</div>
+                    
+                    <div class="story-line">Bisher mussten wir immer persönlich raus.</div>
+                    <div class="story-line">Hingehen. Anfassen. Reparieren.</div>
+                    
+                    <div class="story-line" style="margin-top: 20px;">Aber die Straße hat sich verändert.</div>
+                    <div class="story-line">Autos senden jetzt Daten. Fehlercodes.</div>
+                    <div class="story-line">Wir empfangen direkt aus dem Motorraum.</div>
+                    
+                    <div class="story-line" style="margin-top: 20px; color: var(--accent-color); font-weight: bold;">
+                        DEINE MISSION STARTET JETZT.
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="finishStory()">Verstanden</button>
             </div>
 
             <!-- START SCREEN -->
@@ -573,13 +602,24 @@
 
         <div class="card-footer">
             <div style="font-weight: 600;">
-                built with ❤️ by marcus
+                built with ❤️ by marcus and his ai team
             </div>
             <div style="opacity: 0.5; font-family: monospace;">
                 ADAC_DEV_BUILD_2026
             </div>
         </div>
     </div>
+
+    <!-- SERVICE WORKER REGISTRATION (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW failed', err));
+            });
+        }
+    </script>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -588,6 +628,7 @@
         
         // Screens
         const nameEntryScreen = document.getElementById('nameEntryScreen');
+        const storyScreen = document.getElementById('storyScreen'); // New
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const diagnosticOverlay = document.getElementById('diagnosticOverlay');
@@ -623,7 +664,7 @@
         let currentLeaderboard = [];
         let repairsCount = 0;
         let currentPlayerName = null;
-        let combo = 0; // New Combo Variable
+        let combo = 0;
         
         // Diagnostic Logic
         let currentDiagQuestion = null;
@@ -683,11 +724,23 @@
         function showNameEntry() {
             nameEntryScreen.style.display = 'flex';
             startScreen.style.display = 'none';
+            storyScreen.style.display = 'none';
             initialNameInput.focus();
+        }
+
+        function showStoryScreen() {
+            nameEntryScreen.style.display = 'none';
+            storyScreen.style.display = 'flex';
+        }
+
+        function finishStory() {
+            storyScreen.style.display = 'none';
+            showStartScreen();
         }
 
         function showStartScreen() {
             nameEntryScreen.style.display = 'none';
+            storyScreen.style.display = 'none';
             startScreen.style.display = 'flex';
             fetchLeaderboard();
         }
@@ -706,14 +759,13 @@
             const name = initialNameInput.value.trim();
             if (!name) return;
             
-            // Normalize name (e.g. capitalize first letter)
             const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
-            
             localStorage.setItem('pannenfahrerName', cleanName);
             currentPlayerName = cleanName;
             welcomeText.textContent = `Hallo, ${currentPlayerName}!`;
             
-            showStartScreen();
+            // Show Story first
+            showStoryScreen();
         }
 
         function logout() {
@@ -746,7 +798,6 @@
 
         async function autoSubmitScore() {
             if (!currentPlayerName || score <= 0) {
-                // Just show leaderboard if no score or name error
                 gameOverLeaderboard.style.display = 'block';
                 renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
                 return;
@@ -754,8 +805,6 @@
 
             submittingScoreText.style.display = 'block';
 
-            // Check if player already has a higher score locally (opt.)
-            // We trust the backend to handle it, but can check visually
             const existingEntry = currentLeaderboard.find(entry => (entry.name || entry.member) === currentPlayerName);
             if (existingEntry && existingEntry.score >= score) {
                 submittingScoreText.textContent = `> Dein Rekord (${existingEntry.score}) bleibt bestehen.`;
@@ -1209,15 +1258,6 @@
         // Start Check
         initGame();
 
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(() => console.log('SW registered'))
-                    .catch(err => console.log('SW failed', err));
-            });
-        }
     </script>
 </body>
 </html>
