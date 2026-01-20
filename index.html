@@ -268,6 +268,35 @@
         .name { flex-grow: 1; color: #cbd5e1; }
         .score { color: var(--success-color); font-weight: bold; }
 
+        /* STATISTICS GRID (Game Over) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 350px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         /* DIAGNOSTIC OVERLAY (Connected Car) */
         .diag-container {
             width: 95%; /* Responsive Width */
@@ -649,6 +678,26 @@
                 <h2 id="gameOverTitle" style="color: var(--danger-color); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 10px;">Unfall!</h2>
                 <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 20px;">Score: <span id="finalScore" style="color: white; font-weight: bold;">0</span></p>
                 
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="statRepairs">0</span>
+                        <span class="stat-label">Pannen</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statMissed" style="color: #ef4444;">0</span>
+                        <span class="stat-label">Verpasst</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statDodged" style="color: #3b82f6;">0</span>
+                        <span class="stat-label">Verkehr</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="statAMDs" style="color: #10b981;">0</span>
+                        <span class="stat-label">AMDs</span>
+                    </div>
+                </div>
+
                 <div id="submittingScoreText" style="color: var(--accent-color); font-family: monospace; margin-bottom: 15px; display: none;">
                     > Sende Daten an Zentrale...
                 </div>
@@ -727,6 +776,10 @@
         
         let currentLeaderboard = [];
         let repairsCount = 0;
+        let missedRepairs = 0;
+        let dodgedCars = 0;
+        let solvedAMDs = 0;
+
         let currentPlayerName = null;
         let combo = 0;
         
@@ -1000,6 +1053,7 @@
             
             if (isCorrect) {
                 score += 50;
+                solvedAMDs++;
                 floatingTexts.push(new FloatingText(player.x, player.y - 60, "SYSTEM RECOVERED! +50", "#10b981")); 
             } else {
                 score -= 50;
@@ -1188,6 +1242,9 @@
             player.x = canvas.width/2 - player.width/2; player.y = canvas.height - 130;
             cars = []; particles = []; floatingTexts = []; score = 0;
             repairsCount = 0;
+            missedRepairs = 0;
+            dodgedCars = 0;
+            solvedAMDs = 0;
             gameSpeed = baseSpeed; 
             combo = 0; // Reset Combo
             scoreBoard.textContent = 0; scoreBoard.style.color = '#fff';
@@ -1254,6 +1311,11 @@
             gameState = 'GAMEOVER'; finalScoreDisplay.textContent = score;
             const titleElement = document.getElementById('gameOverTitle');
             if (titleElement) titleElement.textContent = reason || "Unfall!";
+
+            document.getElementById('statRepairs').textContent = repairsCount;
+            document.getElementById('statMissed').textContent = missedRepairs;
+            document.getElementById('statDodged').textContent = dodgedCars;
+            document.getElementById('statAMDs').textContent = solvedAMDs;
             
             // Auto-Submit Score without prompt
             autoSubmitScore();
@@ -1281,6 +1343,7 @@
                         if (car.isBroken && !car.repaired) {
                             // Penalty logic
                             score -= 5; 
+                            missedRepairs++;
                             scoreBoard.textContent = score;
                             floatingTexts.push(new FloatingText(car.x + car.width/2 - 10, canvas.height - 40, "-5", "#ef4444"));
                             
@@ -1293,6 +1356,8 @@
                             
                             scoreBoard.style.color = '#ef4444';
                             if (score < 0) crash("Pannenquote!"); else setTimeout(() => { if(gameState === 'PLAYING') scoreBoard.style.color = '#fff'; }, 300);
+                        } else if (!car.isBroken) {
+                             dodgedCars++;
                         }
                         cars.splice(index, 1);
                     }
