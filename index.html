@@ -292,6 +292,8 @@
                     <button class="submit-btn" onclick="submitScore()">Senden</button>
                 </div>
 
+                <div class="leaderboard-list" id="gameOverLeaderboard" style="display: none; margin-top: 15px;"></div>
+
                 <div style="margin-top: 20px;">
                     <span class="kbd">Leertaste</span> für Neustart
                 </div>
@@ -320,6 +322,7 @@
         const repairFill = document.getElementById('repairBarFill');
         const startLeaderboard = document.getElementById('startLeaderboard');
         const newHighscoreForm = document.getElementById('newHighscoreForm');
+        const gameOverLeaderboard = document.getElementById('gameOverLeaderboard');
 
         // Status Variablen
         let gameState = 'START'; // START, PLAYING, REPAIRING, GAMEOVER
@@ -391,8 +394,10 @@
                 });
                 
                 if (res.ok) {
-                    // Refresh
-                    newHighscoreForm.innerHTML = '<p style="color:var(--success-color)">Gespeichert!</p>';
+                    newHighscoreForm.style.display = 'none';
+                    if (gameOverLeaderboard) {
+                        gameOverLeaderboard.style.display = 'block';
+                    }
                     fetchLeaderboard();
                 } else {
                     alert('Fehler beim Speichern.');
@@ -404,8 +409,12 @@
         }
 
         function renderLeaderboard(data) {
+            const targets = [startLeaderboard, gameOverLeaderboard].filter(Boolean);
+
             if (!data || data.length === 0) {
-                startLeaderboard.innerHTML = '<div style="text-align:center; padding:10px; color:#9ca3af">Noch keine Scores</div>';
+                targets.forEach((target) => {
+                    target.innerHTML = '<div style="text-align:center; padding:10px; color:#9ca3af">Noch keine Scores</div>';
+                });
                 return;
             }
             
@@ -419,7 +428,9 @@
                     </div>
                 `;
             });
-            startLeaderboard.innerHTML = html;
+            targets.forEach((target) => {
+                target.innerHTML = html;
+            });
         }
 
         function checkHighscore(finalScore) {
@@ -440,6 +451,9 @@
                 setTimeout(() => document.getElementById('playerNameInput').focus(), 100);
             } else {
                 newHighscoreForm.style.display = 'none';
+            }
+            if (gameOverLeaderboard) {
+                gameOverLeaderboard.style.display = 'none';
             }
         }
 
