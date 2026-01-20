@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Straßenwacht: Connected</title>
     <!-- PWA Integration -->
     <link rel="manifest" href="manifest.json">
@@ -35,6 +35,8 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Prevent touch highlighting on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -43,6 +45,8 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            /* Fix for mobile scrolling issues */
+            height: 100dvh; 
             color: var(--text-primary);
             padding: 20px;
             /* Retro Grid Hintergrund */
@@ -50,12 +54,16 @@
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
+            overflow: hidden; /* Prevent body scroll */
         }
 
         .game-card {
             background: var(--card-bg);
             width: 100%;
             max-width: 900px;
+            /* Auf Desktop fixe Höhe für Konsistenz, auf Mobile flexibel */
+            height: 85vh; 
+            max-height: 900px;
             border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
             overflow: hidden;
@@ -64,14 +72,15 @@
             position: relative;
         }
 
-        /* Spiel Bereich */
+        /* Spiel Bereich: Flex Grow füllt den Rest */
         .game-container {
             width: 100%;
-            height: 600px;
+            flex-grow: 1; /* DAS IST DER FIX: Nimmt allen verfügbaren Platz */
             background-color: #334155;
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            min-height: 0; /* Wichtig für Flexbox Nesting */
         }
 
         canvas {
@@ -93,6 +102,7 @@
             z-index: 20;
             padding: 20px;
             transition: opacity 0.3s;
+            overflow-y: auto; /* Allow scrolling inside overlay on very small screens */
         }
         
         /* Scanline Effekt */
@@ -113,7 +123,7 @@
         }
 
         .game-title {
-            font-size: 3.5rem;
+            font-size: 3rem; /* Etwas kleiner für Sicherheit */
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: -2px;
@@ -130,10 +140,10 @@
 
         .game-subtitle {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #94a3b8;
-            margin-top: 10px;
-            margin-bottom: 30px;
+            margin-top: 5px;
+            margin-bottom: 20px;
             text-transform: lowercase;
             letter-spacing: 2px;
             border-bottom: 2px solid var(--accent-color);
@@ -146,16 +156,16 @@
             text-align: left;
             font-family: 'Courier New', monospace;
             color: #cbd5e1;
-            line-height: 1.6;
-            margin-bottom: 40px;
+            line-height: 1.5;
+            margin-bottom: 30px;
             position: relative;
+            font-size: 0.95rem;
         }
         .story-line {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             opacity: 0;
             animation: fadeIn 0.8s forwards;
         }
-        /* Erweiterte Animationen für alle 8 Zeilen */
         .story-line:nth-child(1) { animation-delay: 0.5s; }
         .story-line:nth-child(2) { animation-delay: 1.5s; }
         .story-line:nth-child(3) { animation-delay: 3.0s; }
@@ -169,10 +179,11 @@
 
         /* CSS CHARACTER (Pannenfahrer SVG) */
         .driver-container {
-            width: 200px;
-            height: 220px;
+            width: 180px;
+            height: 200px;
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            flex-shrink: 0; /* Verhindert das Quetschen auf kleinen screens */
         }
         
         .driver-svg {
@@ -185,19 +196,19 @@
         .name-tag {
             background: #ffffff;
             color: #0f172a;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
             font-weight: bold;
             font-family: 'Courier New', monospace;
             text-transform: uppercase;
             position: absolute;
-            top: 155px; 
-            right: 45px;
+            top: 140px; 
+            right: 40px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform: scale(0);
-            max-width: 80px;
+            max-width: 70px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -214,37 +225,42 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 20px;
+            padding: 15px;
             width: 100%;
-            max-width: 380px;
-            margin-bottom: 30px;
+            max-width: 350px;
+            margin-bottom: 20px;
+            /* Auf kleinen Screens weniger Platz einnehmen */
+            flex-shrink: 1;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
         }
 
         .leaderboard-header {
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
             letter-spacing: 1.5px;
             color: #64748b;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 5px;
         }
 
         .leaderboard-list {
-            max-height: 160px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #475569 transparent;
+            flex-grow: 1; /* Füllt den Rest des Panels */
         }
 
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 10px;
+            padding: 6px 10px;
             font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             border-radius: 4px;
         }
         .leaderboard-item:nth-child(odd) { background: rgba(255,255,255,0.03); }
@@ -254,26 +270,26 @@
 
         /* DIAGNOSTIC OVERLAY (Connected Car) */
         .diag-container {
-            width: 100%;
+            width: 95%; /* Responsive Width */
             max-width: 500px;
             background: rgba(15, 23, 42, 0.95);
             border: 1px solid var(--tech-blue);
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
             position: relative;
             overflow: hidden;
-            display: none; /* Hidden during boot sequence */
+            display: none; 
         }
         
         /* Boot Sequence Styles */
         .boot-container {
-            width: 100%;
+            width: 95%;
             max-width: 600px;
             padding: 20px;
             font-family: 'Courier New', monospace;
             color: var(--tech-blue);
-            font-size: 1.1rem;
+            font-size: 1rem;
             text-align: left;
             text-shadow: 0 0 5px var(--tech-blue);
         }
@@ -293,17 +309,17 @@
             align-items: center;
             border-bottom: 1px solid var(--tech-blue);
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: var(--tech-blue);
             font-family: monospace;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         .diag-blink { animation: blink 1s infinite; }
         
         .diag-question {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.4;
             color: #fff;
         }
@@ -311,20 +327,22 @@
         .diag-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         
         .diag-option {
-            padding: 12px 15px;
+            padding: 10px 12px;
             background: rgba(255,255,255,0.05);
             border: 1px solid #475569;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             font-family: monospace;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
+            /* Prevent text selection */
+            user-select: none;
         }
         
         .diag-option.selected {
@@ -379,6 +397,7 @@
             transition: transform 0.2s, box-shadow 0.2s;
             text-transform: uppercase;
             animation: bounce 2s infinite;
+            margin-top: 10px;
         }
         .start-btn:hover {
             transform: scale(1.05);
@@ -393,14 +412,15 @@
 
         /* Footer */
         .card-footer {
-            padding: 20px 30px;
+            padding: 15px 25px;
             background-color: #0f172a;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #475569;
+            flex-shrink: 0; /* Footer darf nicht schrumpfen */
         }
 
         /* Input Styles */
@@ -422,10 +442,10 @@
         /* HUD */
         #scoreBoard {
             position: absolute;
-            top: 24px; right: 24px;
+            top: 20px; right: 20px;
             font-family: 'Courier New', monospace;
             font-weight: 900;
-            font-size: 28px;
+            font-size: 24px;
             color: #fff;
             text-shadow: 2px 2px 0 #000;
             pointer-events: none;
@@ -434,10 +454,10 @@
         
         #comboText {
             position: absolute;
-            top: 55px; right: 24px;
+            top: 50px; right: 20px;
             font-family: 'Courier New', monospace;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--accent-color);
             text-shadow: 1px 1px 0 #000;
             pointer-events: none;
@@ -455,10 +475,54 @@
             border-radius: 2px; transition: width 0.1s linear;
         }
 
-        @media (max-width: 600px) {
-            .game-title { font-size: 2.5rem; }
-            .game-container { height: 500px; }
-            .card-footer { flex-direction: column; gap: 10px; text-align: center; }
+        /* --- MOBILE OPTIMIZATION (< 768px) --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 0; /* Remove body padding */
+                background-image: none; /* Perf optimization */
+                background-color: #0f172a;
+            }
+            .game-card {
+                height: 100dvh; /* Full dynamic viewport height */
+                max-height: none;
+                width: 100%;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+            }
+            .game-container {
+                /* Container takes all remaining space */
+                flex-grow: 1; 
+                height: auto; 
+                width: 100%;
+            }
+            .card-footer {
+                padding: 10px 15px; /* Compact footer */
+            }
+            .game-title {
+                font-size: 2.2rem;
+            }
+            .game-subtitle {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            .driver-container {
+                width: 140px; /* Smaller avatar */
+                height: 155px;
+            }
+            .name-tag {
+                top: 110px; right: 30px; font-size: 0.6rem;
+            }
+            .leaderboard-panel {
+                padding: 10px;
+                max-width: 90%;
+            }
+            /* Make overlays scrollable just in case content is too tall */
+            .overlay {
+                justify-content: flex-start; /* Start from top on mobile */
+                padding-top: 40px;
+                overflow-y: auto;
+            }
         }
     </style>
 </head>
@@ -477,8 +541,8 @@
 
             <!-- NAME ENTRY SCREEN (Onboarding) -->
             <div id="nameEntryScreen" class="overlay" style="display: none;">
-                <h1 class="game-title" style="font-size: 2.5rem; margin-bottom: 20px;">Willkommen<br>im Team</h1>
-                <p style="margin-bottom: 30px; text-align: center;">Wie ist dein Name, Pannenfahry?</p>
+                <h1 class="game-title" style="margin-bottom: 15px;">Willkommen<br>im Team</h1>
+                <p style="margin-bottom: 20px; text-align: center;">Wie ist dein Name, Pannenfahry?</p>
                 
                 <!-- SVG Character -->
                 <div class="driver-container">
@@ -508,7 +572,7 @@
 
             <!-- STORY SCREEN (Briefing) -->
             <div id="storyScreen" class="overlay" style="display: none;">
-                <h1 class="game-title" style="font-size: 2rem; margin-bottom: 30px; animation: none; text-shadow: none; color: var(--accent-color);">BRIEFING</h1>
+                <h1 class="game-title" style="font-size: 2rem; margin-bottom: 20px; animation: none; text-shadow: none; color: var(--accent-color);">BRIEFING</h1>
                 
                 <div class="story-content">
                     <div class="story-line">> Zugriff auf Personalakte... OK.</div>
@@ -602,7 +666,7 @@
 
         <div class="card-footer">
             <div style="font-weight: 600;">
-                built with ❤️ by marcus and his ai team
+                built with ❤️ by marcus
             </div>
             <div style="opacity: 0.5; font-family: monospace;">
                 ADAC_DEV_BUILD_2026
@@ -759,7 +823,9 @@
             const name = initialNameInput.value.trim();
             if (!name) return;
             
+            // Normalize name (e.g. capitalize first letter)
             const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
+            
             localStorage.setItem('pannenfahrerName', cleanName);
             currentPlayerName = cleanName;
             welcomeText.textContent = `Hallo, ${currentPlayerName}!`;
@@ -798,6 +864,7 @@
 
         async function autoSubmitScore() {
             if (!currentPlayerName || score <= 0) {
+                // Just show leaderboard if no score or name error
                 gameOverLeaderboard.style.display = 'block';
                 renderLeaderboard(currentLeaderboard, gameOverLeaderboardList);
                 return;
@@ -805,6 +872,8 @@
 
             submittingScoreText.style.display = 'block';
 
+            // Check if player already has a higher score locally (opt.)
+            // We trust the backend to handle it, but can check visually
             const existingEntry = currentLeaderboard.find(entry => (entry.name || entry.member) === currentPlayerName);
             if (existingEntry && existingEntry.score >= score) {
                 submittingScoreText.textContent = `> Dein Rekord (${existingEntry.score}) bleibt bestehen.`;
