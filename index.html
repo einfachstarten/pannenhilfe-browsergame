@@ -520,6 +520,44 @@
             border-radius: 2px; transition: width 0.1s linear;
         }
 
+        /* UPDATE NOTIFICATION */
+        #updateBanner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 15px 25px;
+            box-shadow: 0 0 20px rgba(255, 205, 0, 0.3);
+            z-index: 100;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        
+        .update-text {
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .update-btn {
+            background: var(--accent-color);
+            color: #0f172a;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
         /* ADMIN PANEL STYLES */
         .admin-panel {
             background: #0f172a;
@@ -715,12 +753,19 @@
                         <div class="leaderboard-list" id="adminList" style="flex-grow: 1; min-height: 200px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px;">
                             <!-- List populated by JS -->
                         </div>
+                        <button class="admin-footer-btn" onclick="forceReload()" style="background: #eab308; color: #000;">♻ FORCE RELOAD (PWA)</button>
                         <button class="admin-footer-btn" onclick="adminResetAll()" style="background: #7f1d1d;">⚠ ALLES LÖSCHEN</button>
                         <button class="admin-footer-btn" onclick="closeAdmin()" style="background: #334155;">SCHLIESSEN</button>
                     </div>
                     
                     <div id="adminCloseBtn" style="text-align: center; margin-top: 10px; cursor: pointer; color: #64748b; font-size: 0.8rem; text-decoration: underline;" onclick="closeAdmin()">Abbruch</div>
                 </div>
+            </div>
+            
+            <!-- UPDATE BANNER -->
+            <div id="updateBanner">
+                <div class="update-text">SYSTEM UPDATE VERFÜGBAR</div>
+                <button class="update-btn" onclick="applyUpdate()">INSTALLIEREN</button>
             </div>
 
             <!-- START SCREEN -->
@@ -828,9 +873,29 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registered'))
-                    .catch(err => console.log('SW failed', err));
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('SW registered');
+                    // Check for updates
+                    reg.onupdatefound = () => {
+                        const newWorker = reg.installing;
+                        newWorker.onstatechange = () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                document.getElementById('updateBanner').style.display = 'flex';
+                            }
+                        };
+                    };
+                }).catch(err => console.log('SW failed', err));
+            });
+        }
+        
+        function applyUpdate() {
+            // Unregister and reload to force update
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+                window.location.reload();
             });
         }
     </script>
@@ -1202,6 +1267,29 @@
                     fetchLeaderboard();
                 }
             } catch(e) { console.error(e); }
+        }
+        
+        async function forceReload() {
+            if (!confirm("PWA Cache leeren und Seite neu laden?")) return;
+
+            // 1. Unregister Service Worker
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+
+            // 2. Clear Caches
+            if ('caches' in window) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                    await caches.delete(key);
+                }
+            }
+
+            // 3. Reload
+            window.location.reload(true);
         }
 
 
