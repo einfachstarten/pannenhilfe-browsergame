@@ -869,7 +869,13 @@
         function spawnCar() {
             if (gameState !== 'PLAYING') return;
             cars.push(new Car(Math.random() < 0.35));
-            setTimeout(spawnCar, Math.random() * 900 + 700);
+            
+            // PROGRESSIVE DIFFICULTY
+            // Decrease spawn time based on repairs
+            const difficultyFactor = Math.min(0.5, repairsCount * 0.02); // Cap at 50% reduction
+            const minTime = 700 * (1 - difficultyFactor);
+            const variance = 900 * (1 - difficultyFactor);
+            setTimeout(spawnCar, Math.random() * variance + minTime);
         }
 
         function handleInput(type, code) {
@@ -928,6 +934,7 @@
             player.x = canvas.width/2 - player.width/2; player.y = canvas.height - 130;
             cars = []; particles = []; floatingTexts = []; score = 0;
             repairsCount = 0;
+            gameSpeed = baseSpeed; // Reset speed
             scoreBoard.textContent = 0; scoreBoard.style.color = '#fff';
             spawnCar(); animate();
         }
@@ -959,6 +966,12 @@
             currentTarget = null; 
             scoreBoard.textContent = score; 
             
+            // PROGRESSIVE DIFFICULTY: Increase speed every 5 repairs
+            if (repairsCount % 5 === 0) {
+                 gameSpeed = Math.min(12, baseSpeed + (repairsCount / 5) * 0.5);
+                 floatingTexts.push(new FloatingText(player.x, player.y - 80, "LEVEL UP! FASTER!", "#f59e0b"));
+            }
+
             // Trigger Diagnostic Mode every 20 repairs (UPDATED)
             if (repairsCount > 0 && repairsCount % 20 === 0) {
                 triggerDiagnosticMode();
