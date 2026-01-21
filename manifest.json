@@ -26,14 +26,14 @@
   "screenshots": [
     {
       "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/screenshot.png",
-      "sizes": "1280x720",
+      "sizes": "852x960",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Straßenwacht Connected Gameplay"
     },
     {
       "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/screenshot2.png",
-      "sizes": "720x1280",
+      "sizes": "398x646",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Straßenwacht Connected Mobile"
