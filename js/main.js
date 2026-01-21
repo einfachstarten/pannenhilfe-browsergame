@@ -4,6 +4,31 @@ import { createGame } from './game.js';
 const ui = createUI();
 const game = createGame(ui);
 
+// Handle Shortcuts / Deep Links
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get('action');
+
+  if (action === 'leaderboard') {
+    // Warte bis Game initialisiert ist, dann zeige Start Screen mit Leaderboard
+    setTimeout(() => {
+      const startScreen = document.getElementById('startScreen');
+      if (startScreen) {
+        startScreen.style.display = 'flex';
+        const leaderboardPanel = document.getElementById('startLeaderboard');
+        if (leaderboardPanel) {
+          leaderboardPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }, 100);
+  }
+
+  // Query Parameter clearen (optional, für saubere URL)
+  if (action) {
+    window.history.replaceState({}, '', '/');
+  }
+});
+
 const nameInput = document.getElementById('initialNameInput');
 const saveNameBtn = document.getElementById('saveNameBtn');
 const finishStoryBtn = document.getElementById('finishStoryBtn');

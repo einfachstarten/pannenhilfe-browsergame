@@ -5,10 +5,14 @@
   "description": "Hilf liegengebliebenen Fahrzeugen und knacke den Highscore im Connected Car Simulator.",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "lang": "de",
+  "dir": "ltr",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/android-launchericon-192-192.png",
@@ -26,17 +30,38 @@
   "screenshots": [
     {
       "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/screenshot.png",
-      "sizes": "852x960",
+      "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Straßenwacht Connected Gameplay"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Neues Spiel starten",
+      "short_name": "Spielen",
+      "description": "Starte direkt ein neues Spiel",
+      "url": "/",
+      "icons": [
+        {
+          "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/android-launchericon-192-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
-      "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/screenshot2.png",
-      "sizes": "398x646",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Straßenwacht Connected Mobile"
+      "name": "Bestenliste anzeigen",
+      "short_name": "Scores",
+      "description": "Zeige die Top-Einsatzkräfte",
+      "url": "/?action=leaderboard",
+      "icons": [
+        {
+          "src": "https://t08acaea86euo6zr.public.blob.vercel-storage.com/android-launchericon-192-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
