@@ -1,8 +1,7 @@
-const CACHE_NAME = 'strassenwacht-v1';
+const CACHE_NAME = 'strassenwacht-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/icon.svg',
   '/manifest.json'
 ];
 
