@@ -1,5 +1,6 @@
 {
   "name": "Straßenwacht Connected",
+  "id": "/",
   "short_name": "Straßenwacht",
   "description": "Hilf liegengebliebenen Fahrzeugen und knacke den Highscore im Connected Car Simulator.",
   "start_url": "/",
@@ -20,6 +21,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "[SCREENSHOT_URL]",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Straßenwacht Connected Gameplay"
+    },
+    {
+      "src": "[SCREENSHOT_URL]",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Straßenwacht Connected Mobile"
     }
   ]
 }
