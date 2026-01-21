@@ -106,8 +106,20 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
-      .then((reg) => {
+      .then(async (reg) => {
         console.log('SW registered');
+
+        if ('periodicSync' in reg) {
+          try {
+            await reg.periodicSync.register('update-leaderboard', {
+              minInterval: 24 * 60 * 60 * 1000
+            });
+            console.log('[Main] Periodic sync registered for leaderboard updates');
+          } catch (error) {
+            console.error('[Main] Periodic sync registration failed:', error);
+          }
+        }
+
         reg.onupdatefound = () => {
           const newWorker = reg.installing;
           newWorker.onstatechange = () => {

@@ -136,7 +136,12 @@ export function createGame(ui) {
 
     try {
       const res = await api.submitScore(state.currentPlayerName, state.score);
-      if (res.ok) {
+      if (res.queued) {
+        elements.submittingScoreText.textContent = '> SCORE IN WARTESCHLANGE. WIRD GESENDET.';
+        elements.submittingScoreText.style.color = '#f59e0b';
+        elements.gameOverLeaderboard.style.display = 'block';
+        ui.renderLeaderboard(state.currentLeaderboard, elements.gameOverLeaderboardList);
+      } else if (res.ok) {
         elements.submittingScoreText.textContent = '> DATEN ÜBERTRAGEN. HIGHSCORE!';
         elements.submittingScoreText.style.color = 'var(--success-color)';
 
@@ -154,6 +159,20 @@ export function createGame(ui) {
       elements.gameOverLeaderboard.style.display = 'block';
       ui.renderLeaderboard(state.currentLeaderboard, elements.gameOverLeaderboardList);
     }
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'LEADERBOARD_UPDATED') {
+        console.log('[Game] Leaderboard updated from background sync');
+
+        state.currentLeaderboard = event.data.data;
+
+        if (elements.startScreen.style.display === 'flex') {
+          ui.renderLeaderboard(event.data.data, elements.startLeaderboard);
+        }
+      }
+    });
   }
 
   function toggleAdmin() {
