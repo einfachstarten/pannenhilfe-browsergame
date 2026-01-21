@@ -3,6 +3,7 @@
   "short_name": "Straßenwacht",
   "description": "Hilf liegengebliebenen Fahrzeugen und knacke den Highscore im Connected Car Simulator.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
