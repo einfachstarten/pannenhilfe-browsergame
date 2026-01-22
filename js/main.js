@@ -1,8 +1,5 @@
 import { createUI } from './ui.js';
 import { createGame } from './game.js';
-import { inject } from '@vercel/analytics';
-
-inject();
 
 const ui = createUI();
 const game = createGame(ui);
