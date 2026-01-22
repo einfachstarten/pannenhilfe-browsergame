@@ -128,6 +128,25 @@ if (applyUpdateBtn) {
 }
 
 if ('serviceWorker' in navigator) {
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const reloadPwaOnce = (reason) => {
+    if (!isStandalone) return;
+    if (sessionStorage.getItem('pwaReloaded')) return;
+    sessionStorage.setItem('pwaReloaded', 'true');
+    console.log('[Main] Forcing PWA reload:', reason);
+    window.location.reload();
+  };
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    reloadPwaOnce('controllerchange');
+  });
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'FORCE_RELOAD') {
+      reloadPwaOnce(event.data?.reason || 'sw-message');
+    }
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')

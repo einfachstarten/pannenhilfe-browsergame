@@ -1,4 +1,4 @@
-const CACHE_NAME = 'strassenwacht-v5';
+const CACHE_NAME = 'strassenwacht-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -22,14 +22,20 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   console.log('[SW] Activate Event');
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
         keys.filter(key => key !== CACHE_NAME).map(key => {
           console.log('[SW] Deleting old cache:', key);
           return caches.delete(key);
         })
-      )
-    )
+      );
+
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clients.forEach(client => {
+        client.postMessage({ type: 'FORCE_RELOAD', reason: 'sw-activated' });
+      });
+    })()
   );
   return self.clients.claim(); // Übernimmt sofort Kontrolle
 });
