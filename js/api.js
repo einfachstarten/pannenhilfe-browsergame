@@ -1,9 +1,25 @@
 export async function fetchLeaderboard() {
-  const res = await fetch('/api/highscores');
-  if (!res.ok) {
-    throw new Error('API Offline');
+  try {
+    const signal =
+      typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined;
+    const res = await fetch('/api/highscores', { signal });
+
+    if (!res.ok) {
+      if (res.status === 429) {
+        throw new Error('Rate limit exceeded (429)');
+      } else if (res.status >= 500) {
+        throw new Error('Server error (500+)');
+      }
+      throw new Error(`API Error: ${res.status}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function submitScore(name, score) {

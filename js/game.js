@@ -154,8 +154,25 @@ export function createGame(ui) {
         elements.submittingScoreText.textContent = '> FEHLER BEI DER ÜBERTRAGUNG.';
       }
     } catch (e) {
-      console.error(e);
-      elements.submittingScoreText.textContent = '> OFFLINE MODUS.';
+      console.error('[Score Submit Error]', e);
+
+      if (!navigator.onLine) {
+        elements.submittingScoreText.textContent = '> OFFLINE - SCORE WIRD SPÄTER GESENDET.';
+        elements.submittingScoreText.style.color = '#f59e0b';
+      } else if (e.message && e.message.includes('429')) {
+        elements.submittingScoreText.textContent = '> ZU VIELE ANFRAGEN - BITTE WARTEN.';
+        elements.submittingScoreText.style.color = '#f59e0b';
+      } else if (e.message && e.message.includes('timeout')) {
+        elements.submittingScoreText.textContent = '> ZEITÜBERSCHREITUNG - VERSUCHE ERNEUT.';
+        elements.submittingScoreText.style.color = '#f59e0b';
+      } else if (e.message && e.message.includes('Failed to fetch')) {
+        elements.submittingScoreText.textContent = '> SERVER NICHT ERREICHBAR.';
+        elements.submittingScoreText.style.color = 'var(--danger-color)';
+      } else {
+        elements.submittingScoreText.textContent = '> UNBEKANNTER FEHLER - KONTAKTIERE SUPPORT.';
+        elements.submittingScoreText.style.color = 'var(--danger-color)';
+      }
+
       elements.gameOverLeaderboard.style.display = 'block';
       ui.renderLeaderboard(state.currentLeaderboard, elements.gameOverLeaderboardList);
     }
@@ -759,6 +776,16 @@ export function createGame(ui) {
     draw();
     initGame();
   }
+
+  window.addEventListener('online', () => {
+    ui.showToast('Verbindung wiederhergestellt', 'online');
+    console.log('[Network] Online');
+  });
+
+  window.addEventListener('offline', () => {
+    ui.showToast('Offline Modus aktiv', 'offline', 5000);
+    console.log('[Network] Offline');
+  });
 
   return {
     init,
