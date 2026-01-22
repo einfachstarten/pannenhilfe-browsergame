@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenschutzerklärung - Straßenwacht Connected</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0f172a;
+            border-bottom: 3px solid #ffcd00;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #1e293b;
+            margin-top: 30px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #ffcd00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .last-updated {
+            color: #64748b;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Datenschutzerklärung</h1>
+        <p class="last-updated">Stand: Januar 2026</p>
+
+        <h2>1. Verantwortlicher</h2>
+        <p>
+            Straßenwacht Connected<br>
+            Marcus Braun<br>
+            E-Mail: strassenwacht@einfachstarten.jetzt
+        </p>
+
+        <h2>2. Erhebung und Speicherung personenbezogener Daten</h2>
+        
+        <h3>2.1 Spielername</h3>
+        <p>
+            Beim ersten Start der App werden Sie aufgefordert, einen Spielernamen einzugeben. 
+            Dieser Name wird ausschließlich lokal auf Ihrem Gerät gespeichert (localStorage) 
+            und dient zur Personalisierung Ihrer Spielerfahrung.
+        </p>
+
+        <h3>2.2 Highscores</h3>
+        <p>
+            Wenn Sie ein Spiel beenden, wird Ihr Score zusammen mit Ihrem Spielernamen an 
+            unseren Server übermittelt und in einer Datenbank gespeichert, um die Bestenliste 
+            zu erstellen. Diese Daten sind öffentlich einsehbar und enthalten:
+        </p>
+        <ul>
+            <li>Spielername (von Ihnen gewählt, max. 12 Zeichen)</li>
+            <li>Erreichte Punktzahl</li>
+        </ul>
+        <p>
+            Es werden keine weiteren personenbezogenen Daten (E-Mail, IP-Adresse, etc.) 
+            mit den Scores gespeichert.
+        </p>
+
+        <h3>2.3 Service Worker & Caching</h3>
+        <p>
+            Die App nutzt einen Service Worker, um Inhalte lokal auf Ihrem Gerät zu speichern. 
+            Dies ermöglicht die Offline-Funktionalität. Gespeichert werden ausschließlich:
+        </p>
+        <ul>
+            <li>App-Code (HTML, CSS, JavaScript)</li>
+            <li>Grafische Assets</li>
+            <li>Temporär: Ausstehende Score-Submissions (bei Offline-Nutzung)</li>
+        </ul>
+        <p>Diese Daten können Sie jederzeit über die Browser-Einstellungen löschen.</p>
+
+        <h2>3. Verwendung von Analysetools</h2>
+        <p>
+            Wir nutzen Vercel Analytics zur anonymisierten Erfassung von Nutzungsstatistiken 
+            (Seitenaufrufe, Gerätekategorien). Es werden keine personenbezogenen Daten erfasst 
+            oder mit Dritten geteilt. Vercel Analytics verwendet keine Cookies.
+        </p>
+
+        <h2>4. Hosting & Server</h2>
+        <p>
+            Die App wird gehostet über:
+        </p>
+        <ul>
+            <li><strong>Vercel Inc.</strong> (Frontend Hosting) - Server in der EU</li>
+            <li><strong>Redis Cloud</strong> (Highscore-Datenbank) - Server in der EU (Frankfurt)</li>
+        </ul>
+
+        <h2>5. Ihre Rechte</h2>
+        <p>Sie haben das Recht auf:</p>
+        <ul>
+            <li><strong>Auskunft:</strong> Welche Daten über Sie gespeichert sind</li>
+            <li><strong>Berichtigung:</strong> Korrektur falscher Daten</li>
+            <li><strong>Löschung:</strong> Entfernung Ihrer Daten aus der Highscore-Liste</li>
+            <li><strong>Widerspruch:</strong> Widerspruch gegen die Datenverarbeitung</li>
+        </ul>
+        <p>
+            Um Ihre Rechte auszuüben, kontaktieren Sie uns unter der oben genannten E-Mail-Adresse. 
+            Geben Sie dabei Ihren Spielernamen an, damit wir Ihre Daten identifizieren können.
+        </p>
+
+        <h2>6. Datenlöschung</h2>
+        <p>
+            Sie können Ihre lokal gespeicherten Daten jederzeit löschen durch:
+        </p>
+        <ul>
+            <li>App deinstallieren</li>
+            <li>Browser-Cache leeren</li>
+            <li>In der App: "Abmelden / Anderer Fahrer" klicken</li>
+        </ul>
+        <p>
+            Ihre Highscores in der Bestenliste können Sie nicht selbst löschen. 
+            Kontaktieren Sie uns hierfür per E-Mail.
+        </p>
+
+        <h2>7. Keine Weitergabe an Dritte</h2>
+        <p>
+            Ihre Daten werden nicht an Dritte verkauft oder weitergegeben, außer:
+        </p>
+        <ul>
+            <li>Gesetzliche Verpflichtung besteht</li>
+            <li>Zur technischen Bereitstellung notwendig (Hosting-Provider)</li>
+        </ul>
+
+        <h2>8. Sicherheit</h2>
+        <p>
+            Wir setzen technische und organisatorische Sicherheitsmaßnahmen ein, um Ihre 
+            Daten gegen Manipulation, Verlust oder unbefugten Zugriff zu schützen:
+        </p>
+        <ul>
+            <li>HTTPS-Verschlüsselung für alle Datenübertragungen</li>
+            <li>Eingabevalidierung (max. 12 Zeichen, keine Sonderzeichen)</li>
+            <li>Rate Limiting für API-Anfragen</li>
+        </ul>
+
+        <h2>9. Änderungen dieser Datenschutzerklärung</h2>
+        <p>
+            Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie an 
+            geänderte Rechtslage oder Änderungen unserer Dienstleistungen anzupassen. 
+            Die jeweils aktuelle Version finden Sie stets unter dieser URL.
+        </p>
+
+        <h2>10. Kontakt</h2>
+        <p>
+            Bei Fragen zum Datenschutz wenden Sie sich bitte an:<br>
+            E-Mail: strassenwacht@einfachstarten.jetzt
+        </p>
+
+        <a href="/" class="back-link">← Zurück zum Spiel</a>
+    </div>
+</body>
+</html>

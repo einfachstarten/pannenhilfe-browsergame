@@ -1,8 +1,9 @@
-const CACHE_NAME = 'strassenwacht-v4';
+const CACHE_NAME = 'strassenwacht-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/privacy.html'
 ];
 
 // Install Event
