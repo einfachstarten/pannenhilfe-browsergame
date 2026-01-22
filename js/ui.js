@@ -43,7 +43,8 @@ export function createUI() {
     statRepairs: document.getElementById('statRepairs'),
     statMissed: document.getElementById('statMissed'),
     statDodged: document.getElementById('statDodged'),
-    statAMDs: document.getElementById('statAMDs')
+    statAMDs: document.getElementById('statAMDs'),
+    toast: document.getElementById('toast')
   };
 
   return {
@@ -172,6 +173,27 @@ export function createUI() {
           }
         }, 30);
       });
+    },
+    showToast(message, type = 'info', duration = 3000) {
+      const toast = elements.toast;
+
+      let icon = '📡';
+      if (type === 'online') {
+        icon = '✅';
+        toast.className = 'toast online';
+      } else if (type === 'offline') {
+        icon = '⚠️';
+        toast.className = 'toast offline';
+      } else {
+        toast.className = 'toast';
+      }
+
+      toast.innerHTML = `<span class="toast-icon">${icon}</span>${message}`;
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
     }
   };
 }

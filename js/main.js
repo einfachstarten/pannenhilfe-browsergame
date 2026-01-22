@@ -1,5 +1,8 @@
 import { createUI } from './ui.js';
 import { createGame } from './game.js';
+import { inject } from '@vercel/analytics';
+
+inject();
 
 const ui = createUI();
 const game = createGame(ui);
@@ -159,3 +162,12 @@ if ('serviceWorker' in navigator) {
 }
 
 game.init();
+
+setTimeout(() => {
+  const loader = document.getElementById('initialLoader');
+  if (loader) {
+    loader.style.opacity = '0';
+    loader.style.transition = 'opacity 0.3s';
+    setTimeout(() => loader.remove(), 300);
+  }
+}, 500);

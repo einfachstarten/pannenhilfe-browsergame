@@ -9,7 +9,7 @@
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "theme_color": "#ffcd00",
   "lang": "de",
   "dir": "ltr",
   "categories": ["games", "entertainment"],
